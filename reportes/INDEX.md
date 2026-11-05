@@ -11,3 +11,4 @@
 | 2026-11-05 | 6 | T1 — Convergencia de malla y Δt, barridos | [F6_T1_convergencia-barridos.md](F6_T1_convergencia-barridos.md) | completa (194 passed) |
 | 2026-11-05 | 7 | T1 — Perfil, regiones, presets, materiales propios, CF por grupo | [F7_T1_perfil-regiones-materiales.md](F7_T1_perfil-regiones-materiales.md) | código completo (229 passed); catálogo de materiales reales pendiente de fuente |
 | 2026-11-05 | 7 | T2 — Catálogo de materiales con fuente (Limpert), preset car, ejemplo_auto | [F7_T2_catalogo-materiales-limpert.md](F7_T2_catalogo-materiales-limpert.md) | completa (231 passed); preset motorcycle pendiente de fuente |
+| 2026-11-05 | 7 | T3 — Acero AISI 410 y preset motorcycle | [F7_T3_acero-410-preset-moto.md](F7_T3_acero-410-preset-moto.md) | completa (233 passed); 410 no verificado; pastilla sinterizada pendiente |

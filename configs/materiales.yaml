@@ -16,8 +16,16 @@
 #   0,7 BTU/h°F ft = 1,21 W/mK) y contra la difusividad tabulada a = k/(ρc).
 #   Nota: para el disco la tabla imperial da 455 lbm/ft³ ≈ 7288 kg/m³; se usa el valor SI 7228.
 #
-# PENDIENTE (no está en Limpert): acero inoxidable martensítico (discos de motocicleta) y
-# pastilla sinterizada, con su fuente; luego el preset `motorcycle`.
+# stainless_steel_410: ficha técnica "Aleación 410" de Chilexpo SpA (UNS S41000). verified:
+#   false porque (1) la propia ficha declara que es una recopilación (ATI, SSC, Outokumpu) "no
+#   verificada de forma independiente"; (2) su calor específico dice "0,46 Btu/lb/ºF", unidad
+#   errónea: 0,46 BTU/(lb·°F) = 1926 J/(kg·K) es imposible para un acero; se toma 0,46 kJ/(kg·K)
+#   = 460 J/(kg·K) (≡ 0,11 BTU/(lb·°F), valor usual del 410); (3) su densidad, 0,266 lb/in³ =
+#   7363 kg/m³, es menor que la de otras fuentes del 410 (≈ 0,28 lb/in³ ≈ 7750 kg/m³). Se usa
+#   tal cual la ficha; conviene contrastarla con la del fabricante del acero (ATI/Outokumpu).
+#
+# PENDIENTE: pastilla sinterizada (motocicleta) con fuente. Por eso el preset `motorcycle`
+# solo define el disco y la config debe nombrar la pastilla explícitamente.
 
 materials:
   gray_cast_iron_limpert:
@@ -35,6 +43,14 @@ materials:
     cp: 1465.0       # J/(kg·K)
     source: "Limpert, Brake Design and Safety, 2a ed., SAE, Tabla 3-1A 'Brake Design Values, SI Units', columna Pad, p. 123 (el texto aclara que son materiales a base de asbesto; los semimetálicos tienen mayor ρ y k)"
     verified: true
+
+  stainless_steel_410:
+    description: Acero inoxidable martensítico AISI 410 (discos de motocicleta)
+    k: 26.9          # W/(m·K) a 100 °C (187 BTU·in/(h·ft²·°F))
+    rho: 7362.854652913201   # kg/m³ = 0,266 lb/in³ × 27 679,9 (valor de la ficha; ver nota)
+    cp: 460.0        # J/(kg·K) = "0,46" de la ficha leído como kJ/(kg·K), 0–100 °C (ver nota)
+    source: "Chilexpo SpA, ficha técnica 'Aleación 410' (UNS S41000 / DIN X15Cr13 / W.N. 1.4006), Propiedades físicas: densidad 0,266 lb/in3; calor específico 0-100 °C '0,46 Btu/lb/ºF' (unidad errónea en la ficha; se usa 0,46 kJ/(kg·K)); conductividad 26,9 W/m·K a 100 °C. La ficha es una recopilación de ATI, SSC y Outokumpu no verificada independientemente."
+    verified: false
 
   lining_limpert:
     description: Forro de freno de tambor (base asbesto), valores de diseño de Limpert
@@ -65,5 +81,6 @@ presets:
     description: Automóvil de pasajeros, disco de hierro fundido y pastilla (Limpert, Tabla 3-1A)
     disc: gray_cast_iron_limpert
     pad: pad_limpert
-  # motorcycle: PENDIENTE (disco de acero inoxidable martensítico + pastilla sinterizada),
-  # cuando existan esas entradas con fuente en `materials`.
+  motorcycle:
+    description: Motocicleta, disco de acero inoxidable AISI 410. Sin pastilla por defecto (falta fuente de la sinterizada); indique materials.pad en la config.
+    disc: stainless_steel_410

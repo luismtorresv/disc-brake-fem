@@ -104,6 +104,11 @@ def run(
         if pad_name not in library:
             raise ValueError(f"materials.pad = '{pad_name}' no está en la librería.")
         pad = library[pad_name]
+    if pad is None and cfg.load.get("type") == "braking" \
+            and cfg.load.get("gamma", "auto") == "auto" and cfg.groups_with("flux"):
+        origin = f"el preset '{cfg.materials.preset}'" if cfg.materials.preset else "la config"
+        raise ValueError(f"gamma: auto necesita una pastilla y {origin} no la define; indique "
+                         "materials.pad (o un gamma numérico).")
     used = [*materials.values(), *([pad] if pad else [])]
     warn_unverified(used)
     for g, (h_g, _) in cfg.convection.items():

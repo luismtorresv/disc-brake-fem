@@ -499,7 +499,10 @@ hay que recalcularlos, no ajustarlos.
   y dos regiones con el mismo material = homogéneo a 1e-12. 229 passed.
   Catálogo: hierro fundido, pastilla y forro de Limpert (Tabla 3-1A, verificados) y preset
   `car`; `configs/ejemplo_auto.yaml` sin materiales no verificados (T_max = 106,70 °C). 231 passed.
-  PENDIENTE: acero inoxidable martensítico (moto) y pastilla sinterizada (no están en Limpert;
-  hace falta otra fuente) y preset `motorcycle`.
-  Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`.
+  Acero AISI 410 (ficha Chilexpo; verified: false por error de unidad en c_p y densidad
+  dudosa) y preset `motorcycle` (solo disco; la config debe nombrar la pastilla). 233 passed.
+  PENDIENTE: pastilla sinterizada con fuente; contrastar el 410 con ficha de fabricante;
+  datos de geometría/vehículo de moto para un `ejemplo_moto.yaml`.
+  Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`,
+  `reportes/F7_T3_acero-410-preset-moto.md`.
 - [ ] Fase 8 — Documentación

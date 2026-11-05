@@ -375,3 +375,29 @@ def test_auto_example_uses_only_verified_materials():
     assert s["unverified_materials"] == []
     assert s["load"]["gamma"] == pytest.approx(0.8495, abs=1e-4)
     assert s["energy"]["balance_relative_residual"] < 1e-10
+
+
+def test_stainless_410_entry_from_datasheet():
+    """Ficha Chilexpo 'Aleación 410' (UNS S41000): ρ = 0,266 lb/in³, c_p = 0,46 kJ/(kg·K)
+    (la ficha rotula mal la unidad), k = 26,9 W/(m·K) a 100 °C. No verificado (§ nota)."""
+    m = load_library(ROOT / "configs" / "materiales.yaml")["stainless_steel_410"]
+    assert m.rho == pytest.approx(0.266 * 27679.9047102, rel=1e-12)
+    assert (m.k, m.cp) == (26.9, 460.0)
+    assert m.k == pytest.approx(187 * 0.144227889, rel=5e-3)  # 187 BTU·in/(h·ft²·°F)
+    assert not m.verified and "S41000" in m.source
+
+
+def test_motorcycle_preset_requires_explicit_pad():
+    raw = yaml.safe_load(REF.read_text("utf-8"))
+    raw["materials"] = {"library": "configs/materiales.yaml", "preset": "motorcycle"}
+    ov = {"mesh.backend": "structured", "time.t_end": 6.0}
+    with pytest.raises(ValueError, match="preset 'motorcycle' no la define"):
+        run(raw, ov, write=False)
+    raw["materials"]["pad"] = "pad_limpert"
+    with warnings.catch_warnings(record=True) as rec:
+        warnings.simplefilter("always")
+        res = run(raw, ov, write=False)
+    assert res.materials["disc"].name == "stainless_steel_410"
+    assert res.summary["unverified_materials"] == ["stainless_steel_410"]
+    assert any("stainless_steel_410" in str(w.message) for w in rec)
+    assert res.gamma == pytest.approx(0.8164, abs=1e-4)
