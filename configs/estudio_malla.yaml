@@ -1,0 +1,46 @@
+# Estudio de convergencia y barridos paramétricos del caso de referencia (PLAN.md Fase 6).
+# Ejecutar:  python -m discfem study configs/estudio_malla.yaml
+study:
+  name: estudio_malla
+  base: configs/ejemplo_frenado.yaml     # relativa al directorio actual o a este archivo
+  base_overrides: {}                     # claves con puntos aplicadas a TODAS las corridas
+  output_dir: results/estudio_malla
+
+  # Estudio de malla: mismo Δt (el de la base), refine_factor creciente (razón 2).
+  mesh:
+    refine_factors: [1, 2, 4, 8]
+    tolerance_percent: 1.0               # selecciona el primer nivel con ε < 1 % (T_max y sondas)
+
+  # Los estudios siguientes usan el nivel de malla seleccionado (si lo hay).
+  use_selected_mesh: true
+
+  # Estudio de Δt: Δt, Δt/2, Δt/4 con la malla seleccionada.
+  timestep:
+    factors: [1, 2, 4]
+
+  # Barridos paramétricos (una corrida por valor; claves con puntos de la config base).
+  sweeps:
+    - name: desaceleracion
+      key: load.vehicle.decel
+      label: "a [m/s²]"
+      title: "Barrido de desaceleración (misma energía, frenada más corta)"
+      values: [3.0, 4.0, 5.0, 6.0, 7.0]
+    - name: velocidad_inicial
+      key: load.vehicle.v0
+      label: "v0 [m/s]"
+      title: "Barrido de velocidad inicial (60, 80, 100, 120 km/h)"
+      values: [16.67, 22.22, 27.78, 33.33]
+    - name: masa
+      key: load.vehicle.mass
+      label: "m [kg]"
+      title: "Barrido de masa del vehículo"
+      values: [1000.0, 1250.0, 1500.0, 1750.0, 2000.0]
+    # SENSIBILIDAD a la conductividad del disco (±20 % del valor supuesto). NO son materiales
+    # reales: se aplican como overrides y quedan marcados como no verificados. Para comparar
+    # materiales reales, añada entradas con `source` a materiales.yaml y barra
+    # `materials.regions.disc` con sus nombres.
+    - name: conductividad_disco
+      key: materials.overrides.disc.k
+      label: "k disco [W/(m·K)]"
+      title: "Sensibilidad a k del disco (±20 %, valores supuestos)"
+      values: [40.0, 50.0, 60.0]

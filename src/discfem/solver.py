@@ -46,7 +46,7 @@ class Result:
         transient: resultado del esquema θ (campos, T_max(t), energías en J/rad).
         materials: material por región (con overrides aplicados); pad: material de la pastilla.
         gamma: γ usado (None si la carga no es ``braking``); load: modelo de carga.
-        probe_T: (n_guardados, n_sondas) temperatura en las sondas.
+        probe_T: (n_pasos + 1, n_sondas) temperatura en las sondas en TODOS los pasos.
         summary: diccionario que se escribe como ``summary.json``.
         output_dir: carpeta de resultados (None si no se escribió nada).
     """
@@ -120,17 +120,19 @@ def run(
 
     # --- tiempo ----------------------------------------------------------------------------
     t_f = load.t_f if load is not None else None
-    times = time_grid(cfg.time.t_end, t_f=t_f, dt=cfg.time.dt)
-    tr = integrate(
-        M, K, H, cfg.T0, times, F_brake=F_brake, t_f=t_f, F_conv=F_conv,
-        theta=cfg.time.theta, rannacher_steps=cfg.time.rannacher_steps,
-    )
-
-    # --- sondas y resumen --------------------------------------------------------------------
     from .postprocess import interpolation_matrix, write_outputs
 
     P = interpolation_matrix(mesh, cfg.output.probes)
-    probe_T = tr.saved_T @ P.T if len(cfg.output.probes) else np.zeros((tr.saved_T.shape[0], 0))
+    times = time_grid(cfg.time.t_end, t_f=t_f, dt=cfg.time.dt,
+                      steps_per_tf=cfg.time.steps_per_tf)
+    tr = integrate(
+        M, K, H, cfg.T0, times, F_brake=F_brake, t_f=t_f, F_conv=F_conv,
+        theta=cfg.time.theta, rannacher_steps=cfg.time.rannacher_steps,
+        save_every=cfg.output.save_every, probe_matrix=P,
+    )
+
+    # --- resumen ---------------------------------------------------------------------------
+    probe_T = tr.probe_history
     elapsed = _time.perf_counter() - t_start
 
     result = Result(
@@ -212,7 +214,7 @@ def make_summary(res: Result, used: list[Material], elapsed: float) -> dict:
             {
                 "r": r, "z": z,
                 "T_max": float(res.probe_T[:, j].max()),
-                "time_of_max": float(tr.saved_times[int(np.argmax(res.probe_T[:, j]))]),
+                "time_of_max": float(times[int(np.argmax(res.probe_T[:, j]))]),
                 "T_final": float(res.probe_T[-1, j]),
             }
             for j, (r, z) in enumerate(cfg.output.probes)

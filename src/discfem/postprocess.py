@@ -248,7 +248,7 @@ def write_outputs(result, library_path: str | Path) -> Path:
         with (out / "probes.csv").open("w", newline="", encoding="utf-8") as fh:
             w = csv.writer(fh)
             w.writerow(["t", *[f"T(r={r:g};z={z:g})" for r, z in cfg.output.probes]])
-            for i, t in enumerate(tr.saved_times):
+            for i, t in enumerate(tr.times):
                 w.writerow([repr(float(t)), *[repr(float(v)) for v in result.probe_T[i]]])
 
     t_peak = result.summary["T_max"]["time"]
@@ -260,7 +260,7 @@ def write_outputs(result, library_path: str | Path) -> Path:
         plot_mesh(mesh, out / "mesh.png", title=f"{cfg.case} [{cfg.mesh.backend}]")
         plot_field_snapshots(mesh, snap_t, snap_T, out / "field.png", T_ref=cfg.T0)
         plot_tmax(tr.times, tr.T_max, t_f, out / "tmax.png", cfg.output.probes,
-                  tr.saved_times, result.probe_T)
+                  tr.times, result.probe_T)
         r_mid = 0.5 * (cfg.geometry.r_a + cfg.geometry.r_b)
         plot_depth_profiles(mesh, r_mid, snap_t, snap_T, out / "depth_profiles.png")
     if "vtk" in formats:

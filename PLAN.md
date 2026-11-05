@@ -486,6 +486,11 @@ hay que recalcularlos, no ajustarlos.
   salvo `compute_time_s`. Ojo: la referencia de T8 refleja θ = 1; con CN + Rannacher,
   T(60 s) = 72,8028 °C, fuera de 72,3 ± 0,5 por 0,003 °C. 174 passed.
   Reporte: `reportes/F5_T1_config-solver-salidas.md`.
-- [ ] Fase 6 — Convergencia y estudios paramétricos
+- [x] Fase 6 — Convergencia y estudios paramétricos (2026-11-05). `convergence.py` +
+  `python -m discfem study configs/estudio_malla.yaml` (27 s). Malla: ε = 0,18 → 0,067 →
+  0,013 % (rf 1→8), nivel seleccionado rf = 2. Δt: p = 1,001 (θ = 1); Richardson da
+  T(60 s) ≈ 72,81 °C, igual que CN + Rannacher. Barridos a, v0, m crecientes; k del disco solo
+  como sensibilidad ±20 % (no hay materiales con fuente). 194 passed.
+  Reporte: `reportes/F6_T1_convergencia-barridos.md`.
 - [ ] Fase 7 — Generalización (opcional)
 - [ ] Fase 8 — Documentación

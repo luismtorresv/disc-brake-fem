@@ -111,6 +111,8 @@ class TransientResult:
         energy_conv: (n+1,) energía acumulada que sale por convección, Σ Δt·1ᵀ(H T − F_conv).
         thetas: (n,) θ usado en cada paso.
         n_factorizations: número de factorizaciones LU realizadas.
+        probe_history: (n+1, n_sondas) P·Tⁿ en TODOS los pasos (vacío si no se dio
+            ``probe_matrix``); permite seguir sondas sin guardar los campos completos.
     """
 
     times: np.ndarray
@@ -123,6 +125,7 @@ class TransientResult:
     energy_conv: np.ndarray
     thetas: np.ndarray
     n_factorizations: int
+    probe_history: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
     extra: dict = field(default_factory=dict)
 
     @property
@@ -159,6 +162,7 @@ def integrate(
     theta: float = DEFAULT_THETA,
     rannacher_steps: int = DEFAULT_RANNACHER_STEPS,
     save_every: int = 1,
+    probe_matrix: sp.spmatrix | None = None,
 ) -> TransientResult:
     """Integra M Ṫ + (K + H) T = F_brake(t) + F_conv con el esquema θ.
 
@@ -174,7 +178,10 @@ def integrate(
         theta: θ ∈ [0, 1]; ver ``DEFAULT_THETA``.
         rannacher_steps: número de pasos iniciales con θ = 1 (irrelevante si θ = 1).
         save_every: guarda el campo cada tantos pasos (siempre guarda el primero y el último).
+        probe_matrix: matriz (n_sondas × N); si se da, se registra P·T en cada paso.
     """
+    if int(save_every) != save_every or save_every < 1:
+        raise ValueError(f"save_every debe ser un entero ≥ 1; se recibió {save_every}.")
     if not 0.0 <= theta <= 1.0:
         raise ValueError(f"time.theta debe estar en [0, 1]; se recibió {theta}.")
     if rannacher_steps < 0:
@@ -213,6 +220,10 @@ def integrate(
     T_max_node[0] = int(np.argmax(T))
     T_max[0] = T[T_max_node[0]]
     saved_t, saved_T = [times[0]], [T.copy()]
+    P = None if probe_matrix is None else sp.csr_matrix(probe_matrix)
+    probes = np.zeros((n_steps + 1, 0 if P is None else P.shape[0]))
+    if P is not None:
+        probes[0] = P @ T
 
     # Caché de factorizaciones: (θ, Δt) → (LU, B). Dos pasos cuyo Δt difiere < 1e-9 relativo
     # (solo por redondeo de la malla temporal) comparten la factorización, y ese paso usa el Δt
@@ -260,6 +271,8 @@ def integrate(
         T = T_new
         T_max_node[k + 1] = int(np.argmax(T))
         T_max[k + 1] = T[T_max_node[k + 1]]
+        if P is not None:
+            probes[k + 1] = P @ T
         if (k + 1) % save_every == 0 or k + 1 == n_steps:
             saved_t.append(t1)
             saved_T.append(T.copy())
@@ -275,4 +288,5 @@ def integrate(
         energy_conv=e_conv,
         thetas=thetas,
         n_factorizations=len(cache),
+        probe_history=probes,
     )

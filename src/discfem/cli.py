@@ -2,7 +2,7 @@
 
 - ``run``: corrida completa; ``--set sección.clave=valor`` (repetible) aplica overrides.
 - ``mesh``: solo malla + figura.
-- ``study``: estudios de convergencia (Fase 6, aún no implementado).
+- ``study``: estudios de convergencia de malla y Δt, y barridos paramétricos.
 """
 
 from __future__ import annotations
@@ -34,8 +34,8 @@ def _parse_set(items: list[str]) -> dict:
     return out
 
 
-def _format_warning(message, category, filename, lineno, line=None) -> str:
-    return f"ADVERTENCIA ({category.__name__}): {message}\n"
+def _show_warning(message, category, filename, lineno, file=None, line=None) -> None:
+    print(f"ADVERTENCIA ({category.__name__}): {message}", file=file or sys.stderr)
 
 
 def cmd_mesh(config_path: Path, overrides: dict) -> int:
@@ -102,6 +102,33 @@ def cmd_run(config_path: Path, overrides: dict) -> int:
     return 0
 
 
+def cmd_study(study_path: Path, overrides: dict) -> int:
+    """Estudio de malla, de Δt y barridos (ver ``convergence.run_study``). ``--set`` modifica
+    el YAML de estudio (p. ej. ``study.mesh.refine_factors=[1,2]``)."""
+    from .convergence import run_study
+
+    if overrides:
+        import tempfile
+
+        raw = yaml.safe_load(study_path.read_text(encoding="utf-8"))
+        for key, value in overrides.items():
+            set_dotted(raw, key, value)
+        # El YAML modificado se escribe junto al original para que las rutas relativas sigan
+        # resolviéndose igual; se borra al terminar.
+        with tempfile.NamedTemporaryFile("w", suffix=".yaml", dir=study_path.parent,
+                                         delete=False, encoding="utf-8") as fh:
+            yaml.safe_dump(raw, fh, allow_unicode=True, sort_keys=False)
+            tmp = Path(fh.name)
+        try:
+            summary = run_study(tmp)
+        finally:
+            tmp.unlink(missing_ok=True)
+    else:
+        summary = run_study(study_path)
+    print(f"Salidas del estudio: {summary['output_dir']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Punto de entrada de la CLI."""
     # La consola de Windows usa cp1252 por defecto y no puede imprimir Σ, r̄, ²...
@@ -114,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     for name, help_ in [
         ("run", "corrida completa"),
         ("mesh", "solo malla + figura"),
-        ("study", "estudio de convergencia (Fase 6)"),
+        ("study", "estudio de convergencia y barridos"),
     ]:
         p = sub.add_parser(name, help=help_)
         p.add_argument("config", type=Path, help="archivo YAML de configuración")
@@ -123,16 +150,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     overrides = _parse_set(args.set)
 
-    warnings.formatwarning = _format_warning
-    for cat in (UnverifiedMaterialWarning, PropertyRangeWarning):
-        warnings.simplefilter("always", cat)
-    try:
-        if args.command == "mesh":
-            return cmd_mesh(args.config, overrides)
-        if args.command == "run":
-            return cmd_run(args.config, overrides)
-    except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
-    print(f"El comando '{args.command}' aún no está implementado (ver PLAN.md).", file=sys.stderr)
-    return 1
+    commands = {"mesh": cmd_mesh, "run": cmd_run, "study": cmd_study}
+    # Las advertencias se muestran siempre (una por corrida) y en formato legible; el estado
+    # global de `warnings` se restaura al salir (importa si main() se llama en el mismo proceso).
+    with warnings.catch_warnings():
+        warnings.showwarning = _show_warning
+        for cat in (UnverifiedMaterialWarning, PropertyRangeWarning):
+            warnings.simplefilter("always", cat)
+        try:
+            return commands[args.command](args.config, overrides)
+        except ValueError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 2

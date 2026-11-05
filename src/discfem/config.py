@@ -17,7 +17,7 @@ import yaml
 
 from .geometry import BOUNDARY_GROUPS, RectangleGeometry
 from .mesh import MeshOptions
-from .timestepping import DEFAULT_RANNACHER_STEPS, DEFAULT_THETA
+from .timestepping import DEFAULT_RANNACHER_STEPS, DEFAULT_STEPS_PER_TF, DEFAULT_THETA
 
 _TOP_KEYS = {
     "case", "geometry", "mesh", "materials", "boundaries", "convection", "initial", "load",
@@ -39,21 +39,24 @@ class MaterialsConfig:
 
 @dataclass(frozen=True)
 class TimeConfig:
-    """Sección ``time``. ``dt`` es ``"auto"`` (t_f/100) o un número en segundos."""
+    """Sección ``time``. ``dt`` es ``"auto"`` (t_f/``steps_per_tf``) o un número en segundos."""
 
     t_end: float
     theta: float = DEFAULT_THETA
     rannacher_steps: int = DEFAULT_RANNACHER_STEPS
     dt: float | str = "auto"
+    steps_per_tf: int = DEFAULT_STEPS_PER_TF
 
 
 @dataclass(frozen=True)
 class OutputConfig:
-    """Sección ``output``: carpeta, sondas (r, z) y formatos (csv, vtk, png)."""
+    """Sección ``output``: carpeta, sondas (r, z), formatos (csv, vtk, png) y cada cuántos
+    pasos se guarda el campo completo (las sondas y T_max se registran en todos los pasos)."""
 
     dir: str
     probes: tuple[tuple[float, float], ...] = ()
     formats: tuple[str, ...] = _FORMATS
+    save_every: int = 1
 
 
 @dataclass(frozen=True)
@@ -186,7 +189,7 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
         raise ValueError("gamma: auto necesita 'materials.pad' para calcular γ.")
 
     tm = _section(raw, "time")
-    _check_keys(tm, "time", {"theta", "rannacher_steps", "dt", "t_end"})
+    _check_keys(tm, "time", {"theta", "rannacher_steps", "dt", "t_end", "steps_per_tf"})
     theta = _number(tm, "time", "theta", default=DEFAULT_THETA)
     if not 0 <= theta <= 1:
         raise ValueError(f"time.theta debe estar en [0, 1]; se recibió {theta}.")
@@ -196,11 +199,14 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
     dt = tm.get("dt", "auto")
     if dt != "auto":
         dt = _number(tm, "time", "dt", positive=True)
+    spt = tm.get("steps_per_tf", DEFAULT_STEPS_PER_TF)
+    if not isinstance(spt, int) or spt < 1:
+        raise ValueError(f"time.steps_per_tf debe ser un entero ≥ 1; se recibió {spt!r}.")
     time = TimeConfig(t_end=_number(tm, "time", "t_end", positive=True), theta=theta,
-                      rannacher_steps=rs, dt=dt)
+                      rannacher_steps=rs, dt=dt, steps_per_tf=spt)
 
     out = _section(raw, "output", required=False)
-    _check_keys(out, "output", {"dir", "probes", "formats"})
+    _check_keys(out, "output", {"dir", "probes", "formats", "save_every"})
     probes = out.get("probes") or []
     try:
         probes = tuple((float(p[0]), float(p[1])) for p in probes if len(p) == 2)
@@ -212,8 +218,11 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
     bad = [f for f in formats if f not in _FORMATS]
     if bad:
         raise ValueError(f"output.formats contiene {bad}; opciones: {_FORMATS}.")
+    save_every = out.get("save_every", 1)
+    if not isinstance(save_every, int) or save_every < 1:
+        raise ValueError(f"output.save_every debe ser un entero ≥ 1; se recibió {save_every!r}.")
     output = OutputConfig(dir=str(out.get("dir", f"results/{case}")), probes=probes,
-                          formats=formats)
+                          formats=formats, save_every=save_every)
 
     return Config(
         case=case, geometry=geometry, mesh=mesh, materials=materials, boundaries=dict(bnd),
