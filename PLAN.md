@@ -497,7 +497,9 @@ hay que recalcularlos, no ajustarlos.
   vehículo, `materials.custom`, `convection.per_group`. Criterios del PLAN cumplidos: el
   rectángulo da resultados idénticos bit a bit (referencia `tests/data/golden_rectangle.json`)
   y dos regiones con el mismo material = homogéneo a 1e-12. 229 passed.
-  PENDIENTE: catálogo de materiales reales (inox martensítico de moto, pastilla sinterizada,
-  hierro gris con fuente) y preset `motorcycle`, con la fuente de Limpert que entregará el
-  usuario. Reporte: `reportes/F7_T1_perfil-regiones-materiales.md`.
+  Catálogo: hierro fundido, pastilla y forro de Limpert (Tabla 3-1A, verificados) y preset
+  `car`; `configs/ejemplo_auto.yaml` sin materiales no verificados (T_max = 106,70 °C). 231 passed.
+  PENDIENTE: acero inoxidable martensítico (moto) y pastilla sinterizada (no están en Limpert;
+  hace falta otra fuente) y preset `motorcycle`.
+  Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`.
 - [ ] Fase 8 — Documentación

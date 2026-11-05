@@ -6,3 +6,5 @@ __pycache__/
 results/
 *.msh
 !legacy/**
+# Fuentes bibliográficas con derechos de autor: no se versionan
+legacy/*.pdf

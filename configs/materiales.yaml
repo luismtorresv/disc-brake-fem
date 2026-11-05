@@ -6,12 +6,44 @@
 #   basta `materials: {preset: car}`. Lo que se escriba explícitamente en `regions` o `pad`
 #   tiene prioridad sobre el preset.
 #
-# Los valores de gray_cast_iron y organic_pad son los SUPUESTOS DEL PROTOTIPO del PLAN: no
-# tienen fuente todavía. PENDIENTE: reemplazarlos y añadir el acero inoxidable martensítico
-# (discos de motocicleta) y la pastilla sinterizada con los datos de Limpert, "Brake Design and
-# Safety" (tabla y página en `source`), y crear el preset `motorcycle`.
+# gray_cast_iron y organic_pad: SUPUESTOS DEL PROTOTIPO del PLAN, sin fuente. Se conservan
+# porque el caso de referencia (ejemplo_frenado.yaml) y las pruebas T8/T9 están definidos con
+# ellos; no los use para resultados del informe.
+#
+# *_limpert: Limpert, R., "Brake Design and Safety", 2.ª ed., SAE, Tabla 3-1A (p. 123).
+#   El libro da k en N·m/(h·K·m); aquí está dividido por 3600 → W/(m·K). Verificado contra la
+#   tabla SI y la imperial 3-1B (28 BTU/h°F ft = 48,46 W/mK; 0,10 BTU/lb°F = 418,7 J/kgK;
+#   0,7 BTU/h°F ft = 1,21 W/mK) y contra la difusividad tabulada a = k/(ρc).
+#   Nota: para el disco la tabla imperial da 455 lbm/ft³ ≈ 7288 kg/m³; se usa el valor SI 7228.
+#
+# PENDIENTE (no está en Limpert): acero inoxidable martensítico (discos de motocicleta) y
+# pastilla sinterizada, con su fuente; luego el preset `motorcycle`.
 
 materials:
+  gray_cast_iron_limpert:
+    description: Hierro fundido (tambor o disco), valores de diseño de Limpert
+    k: 48.4625       # W/(m·K)  = 174 465 N·m/(h·K·m) / 3600
+    rho: 7228.0      # kg/m³
+    cp: 419.0        # J/(kg·K)
+    source: "Limpert, Brake Design and Safety, 2a ed., SAE, Tabla 3-1A 'Brake Design Values, SI Units', columna Drum or Disc, p. 123"
+    verified: true
+
+  pad_limpert:
+    description: Pastilla de disco (base asbesto según el libro), valores de diseño de Limpert
+    k: 1.2116666666666667   # W/(m·K) = 4362 N·m/(h·K·m) / 3600
+    rho: 2595.0      # kg/m³
+    cp: 1465.0       # J/(kg·K)
+    source: "Limpert, Brake Design and Safety, 2a ed., SAE, Tabla 3-1A 'Brake Design Values, SI Units', columna Pad, p. 123 (el texto aclara que son materiales a base de asbesto; los semimetálicos tienen mayor ρ y k)"
+    verified: true
+
+  lining_limpert:
+    description: Forro de freno de tambor (base asbesto), valores de diseño de Limpert
+    k: 1.1594444444444445   # W/(m·K) = 4174 N·m/(h·K·m) / 3600
+    rho: 2034.0      # kg/m³
+    cp: 1256.0       # J/(kg·K)
+    source: "Limpert, Brake Design and Safety, 2a ed., SAE, Tabla 3-1A 'Brake Design Values, SI Units', columna Lining, p. 123"
+    verified: true
+
   gray_cast_iron:
     description: Hierro fundido gris (disco)
     k: 50.0          # W/(m·K)   SUPUESTO DEL PROTOTIPO
@@ -30,8 +62,8 @@ materials:
 
 presets:
   car:
-    description: Automóvil de pasajeros, disco de hierro fundido gris y pastilla orgánica
-    disc: gray_cast_iron
-    pad: organic_pad
+    description: Automóvil de pasajeros, disco de hierro fundido y pastilla (Limpert, Tabla 3-1A)
+    disc: gray_cast_iron_limpert
+    pad: pad_limpert
   # motorcycle: PENDIENTE (disco de acero inoxidable martensítico + pastilla sinterizada),
   # cuando existan esas entradas con fuente en `materials`.

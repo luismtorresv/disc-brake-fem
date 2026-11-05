@@ -153,7 +153,7 @@ def test_profile_example_runs():
     s = res.summary
     assert s["geometry"]["type"] == "profile"
     assert s["energy"]["balance_relative_residual"] < 1e-10
-    assert s["materials"]["disc"]["name"] == "gray_cast_iron"  # vía preset 'car'
+    assert s["materials"]["disc"]["name"] == "gray_cast_iron_limpert"  # vía preset 'car'
     assert s["convection"]["r_outer"]["h"] == 60.0 and s["convection"]["top_inner"]["h"] == 40.0
 
 
@@ -266,7 +266,7 @@ def test_library_new_format_and_presets(tmp_path):
     lib = ROOT / "configs" / "materiales.yaml"
     mats = load_library(lib)
     presets = load_presets(lib, mats)
-    assert presets["car"]["disc"] == "gray_cast_iron"
+    assert presets["car"]["disc"] == "gray_cast_iron_limpert"
     # El formato plano anterior sigue funcionando (p. ej. carpetas de resultados viejas).
     flat = tmp_path / "flat.yaml"
     flat.write_text(yaml.safe_dump({"m": {"k": 1.0, "rho": 1000.0, "cp": 1000.0,
@@ -279,11 +279,12 @@ def test_preset_and_explicit_priority():
     raw = yaml.safe_load(REF.read_text("utf-8"))
     raw["materials"] = {"library": "configs/materiales.yaml", "preset": "car"}
     res = run(raw, {"time.t_end": 6.0, "mesh.backend": "structured"}, write=False)
-    assert res.materials["disc"].name == "gray_cast_iron" and res.pad.name == "organic_pad"
+    assert res.materials["disc"].name == "gray_cast_iron_limpert"
+    assert res.pad.name == "pad_limpert"
     raw["materials"]["custom"] = {"blando": CUSTOM_SOFT}
     raw["materials"]["regions"] = {"disc": "blando"}
     res = run(raw, {"time.t_end": 6.0, "mesh.backend": "structured"}, write=False)
-    assert res.materials["disc"].name == "blando" and res.pad.name == "organic_pad"
+    assert res.materials["disc"].name == "blando" and res.pad.name == "pad_limpert"
 
 
 @pytest.mark.parametrize(
@@ -345,3 +346,32 @@ def test_copy_of_raw_not_mutated_by_overrides():
     run(raw, {"geometry": LAYER, "materials.regions.capa": "gray_cast_iron",
               "time.t_end": 6.0}, write=False)
     assert raw == before
+
+
+# --------------------------------------------------------------- catálogo con fuente
+
+def test_limpert_materials_match_table_3_1A():
+    """Limpert, Brake Design and Safety, 2.ª ed., Tabla 3-1A (SI): k en N·m/(h·K·m) / 3600.
+    Se comprueba también contra la tabla imperial 3-1B y la difusividad tabulada."""
+    lib = load_library(ROOT / "configs" / "materiales.yaml")
+    d, p = lib["gray_cast_iron_limpert"], lib["pad_limpert"]
+    assert (d.k, d.rho, d.cp) == (174465 / 3600, 7228.0, 419.0)
+    assert (p.k, p.rho, p.cp) == (4362 / 3600, 2595.0, 1465.0)
+    assert d.verified and p.verified and "Tabla 3-1A" in d.source
+    btu_hftF = 1.730735  # W/(m·K) por BTU/(h·ft·°F)
+    assert d.k == pytest.approx(28 * btu_hftF, rel=1e-3)      # Tabla 3-1B
+    assert p.k == pytest.approx(0.7 * btu_hftF, rel=1e-3)
+    assert d.cp == pytest.approx(0.10 * 4186.8, rel=1e-3)
+    assert d.diffusivity * 3600 == pytest.approx(0.0576, rel=1e-3)  # a tabulada, m²/h
+    assert p.diffusivity * 3600 == pytest.approx(0.0011, abs=5e-5)  # 2 cifras en la tabla
+
+
+def test_auto_example_uses_only_verified_materials():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # ninguna advertencia de materiales no verificados
+        res = run(ROOT / "configs" / "ejemplo_auto.yaml", {"mesh.refine_factor": 1.0},
+                  write=False)
+    s = res.summary
+    assert s["unverified_materials"] == []
+    assert s["load"]["gamma"] == pytest.approx(0.8495, abs=1e-4)
+    assert s["energy"]["balance_relative_residual"] < 1e-10
