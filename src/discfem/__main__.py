@@ -1,13 +1,8 @@
-"""Punto de entrada `python -m discfem`. La CLI real se implementa en la Fase 5."""
+"""Punto de entrada ``python -m discfem``."""
 
 import sys
 
-
-def main() -> int:
-    """Informa que la CLI aún no existe y devuelve un código de error."""
-    print("CLI pendiente (Fase 5 de PLAN.md).", file=sys.stderr)
-    return 1
-
+from .cli import main
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -459,7 +459,11 @@ hay que recalcularlos, no ajustarlos.
   tamaño de Gmsh del script previo, movido a `legacy/mesh/`. pyproject + esqueleto + prueba de
   humo (7 passed). En Windows `python` no está en el PATH: usar `py -m venv .venv` y
   `.venv\Scripts\python`. Reporte: `reportes/F0_T1_inspeccion-arranque.md`.
-- [ ] Fase 1 — Malla
+- [x] Fase 1 — Malla (2026-11-05). `Mesh`, backends `structured` y `gmsh` con la misma ley
+  h(d) (Threshold con DistMin = 0), seis grupos con aristas orientadas antihorario, CLI
+  `mesh` con figura. T1 pasa en ambos backends (51 passed). Para Gmsh, "celda más pequeña toca
+  brake" se prueba como "a < 2·h_min de brake + área media 10× menor que en el fondo" (ver
+  reporte). Reporte: `reportes/F1_T1_malla.md`.
 - [ ] Fase 2 — Núcleo FEM
 - [ ] Fase 3 — Integración temporal y validación
 - [ ] Fase 4 — Cargas y materiales

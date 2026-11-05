@@ -1,0 +1,59 @@
+# Caso de referencia (PLAN.md §4). Los valores de materiales y vehículo son SUPUESTOS, no
+# verificados. En la Fase 1 solo se usan las secciones geometry, mesh y output.
+case: ejemplo_frenado_100kmh
+
+geometry:
+  type: rectangle            # rectangle | profile (Fase 7)
+  r_inner: 0.07              # m
+  r_outer: 0.15
+  half_thickness: 0.01       # semiespesor e
+  track: {r_a: 0.08, r_b: 0.14}
+  axisymmetric: true         # false => peso 1 (solo validación)
+
+mesh:
+  backend: gmsh              # gmsh | structured
+  refine_factor: 1.0         # divide TODOS los tamaños; 2 => malla ~4x más celdas
+  size_track: 3.0e-4         # tamaño junto a brake [m]
+  size_far: 4.0e-3           # tamaño lejos [m]
+  grading_distance: 0.01     # distancia de transición [m]
+
+materials:
+  library: configs/materiales.yaml
+  regions: {disc: gray_cast_iron}
+  pad: organic_pad           # solo para γ
+  overrides: {}              # ej.: {disc: {k: 48.0}}
+
+boundaries:                  # condición por grupo
+  brake: flux
+  top_inner: convection
+  top_outer: convection
+  r_inner: convection
+  r_outer: convection
+  symmetry: insulated
+
+convection: {h: 40.0, T_inf: 25.0}
+initial: {T0: 25.0}
+
+load:
+  type: braking              # braking | constant_flux | table
+  vehicle:
+    mass: 1500.0
+    v0: 27.78                # 100 km/h
+    decel: 5.0
+    wheel_radius: 0.30
+    brake_fraction: 0.7
+    discs_per_axle: 2
+    faces_per_disc: 2
+  pressure_profile: uniform_wear   # uniform_pressure | uniform_wear
+  gamma: auto                      # auto | número en (0,1)
+
+time:
+  theta: 1.0
+  rannacher_steps: 0
+  dt: auto                   # t_f/100
+  t_end: 60.0
+
+output:
+  dir: results/ejemplo_frenado
+  probes: [[0.11, 0.01], [0.11, 0.005], [0.11, 0.0]]   # (r, z)
+  formats: [csv, vtk, png]
