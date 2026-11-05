@@ -95,7 +95,7 @@ def check_range(name: str, value: float, context: str = "") -> None:
 def _material_from_entry(name: str, entry: dict) -> Material:
     """Valida una entrada de la librería y construye el :class:`Material`."""
     if not isinstance(entry, dict):
-        raise ValueError(  # noqa: TRY004 (error de configuración: ValueError uniforme)
+        raise ValueError(
             f"El material '{name}' debe ser un diccionario de propiedades."
         )
     unknown = set(entry) - _ALLOWED_KEYS
@@ -111,7 +111,7 @@ def _material_from_entry(name: str, entry: dict) -> Material:
     if not isinstance(source, str) or not source.strip():
         raise ValueError(f"El material '{name}' tiene 'source' vacío: cite la fuente.")
     if not isinstance(entry["verified"], bool):
-        raise ValueError(  # noqa: TRY004 (error de configuración: ValueError uniforme)
+        raise ValueError(
             f"En el material '{name}', 'verified' debe ser true o false."
         )
     props = {}

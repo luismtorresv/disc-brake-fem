@@ -479,7 +479,12 @@ hay que recalcularlos, no ajustarlos.
   overrides ⇒ no verificado, γ auto desde la región bajo brake, advertencias). T3 pasa a 1e-12;
   γ = 0,8692, q0 = 764 kW/m², E_cara = 101 kJ. Pendiente para la Fase 5: llamar a
   `warn_unverified` al inicio de `run`. 149 passed. Reporte: `reportes/F4_T1_cargas-materiales.md`.
-- [ ] Fase 5 — Configuración, CLI y salidas
+- [x] Fase 5 — Configuración, CLI y salidas (2026-11-05). `config.py`, `solver.run`,
+  `postprocess` (sondas P1, CSV, JSON, PNG, VTK) y CLI `run --set`. config.yaml de resultados
+  = config efectiva + copia de materiales.yaml (reproducible, probado). T8: 102,30 °C en
+  3,389 s y 72,33 °C a 60 s; T9: 47,33 K ≤ 48,08 K. `summary.json` idéntico entre corridas
+  salvo `compute_time_s`. Ojo: T8 refleja θ = 1 (con CN + Rannacher, T(60 s) = 72,8028, fuera del
+  borde: 72,80 > 72,8 por 0,003). 174 passed. Reporte: `reportes/F5_T1_config-solver-salidas.md`.
 - [ ] Fase 6 — Convergencia y estudios paramétricos
 - [ ] Fase 7 — Generalización (opcional)
 - [ ] Fase 8 — Documentación

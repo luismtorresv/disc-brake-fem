@@ -27,3 +27,8 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
+# TRY004: los errores de configuración del usuario (incluidos los de tipo en el YAML) se
+# reportan siempre como ValueError con mensaje en español, para manejarlos de forma uniforme.
+extend-ignore = ["TRY004"]

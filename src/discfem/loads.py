@@ -264,9 +264,12 @@ def make_load(cfg: dict, r_a: float, r_b: float, gamma: float | None = None) -> 
     )
 
 
-def brake_load_vector(mesh, load: Load, axisymmetric: bool = True):
-    """Devuelve F_brake(t) = f(t)·F_s, con F_s,i = ∫_brake s(r) φ_i w ds ensamblado una vez."""
+def brake_load_vector(mesh, load: Load, axisymmetric: bool = True, groups=("brake",)):
+    """Devuelve F_brake(t) = f(t)·F_s, con F_s,i = Σ_grupos ∫ s(r) φ_i w ds ensamblado una vez.
+
+    ``groups`` son los grupos con condición ``flux`` (por defecto solo ``brake``).
+    """
     from .fem import assemble_edge_load
 
-    F_s = assemble_edge_load(mesh, ["brake"], lambda r, z: load.shape(r), axisymmetric)
+    F_s = assemble_edge_load(mesh, list(groups), lambda r, z: load.shape(r), axisymmetric)
     return lambda t: float(load.time_factor(t)) * F_s
