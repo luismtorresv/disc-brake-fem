@@ -317,15 +317,15 @@ python -m pytest -q          # 240 pruebas, ~20 s
 python -m ruff check src tests
 ```
 
-| Prueba | Qué valida | Resultado |
-|---|---|---|
-| T1 | Malla: Σ A·r̄ = ∫ r dA exacto, grupos de frontera, orientación, refinamiento | 1e-16 |
-| T2 | Matrices elementales frente a cuadratura de alto orden | 1e-12 |
-| T3 | Flujo de fricción: 2π ∫ q r dr = γ P_f | 1e-16 |
-| T4 / T5 | Balance de energía / estado uniforme | ~1e-14 / 9e-14 |
-| T6 | Modo propio axisimétrico (Bessel J0), nx = 10…80 | 0,86 → 0,03 % |
-| T7 | Medio semi-infinito, flujo lineal en t | θ = 1: 0,4 %; CN + Rannacher: 0,07 % |
-| T8 / T9 | Caso de referencia y cota energética | 102,30 °C en 3,39 s; 47,3 ≤ 48,1 K |
+| Prueba  | Qué valida                                                                   | Resultado                            |
+| ------- | ---------------------------------------------------------------------------- | ------------------------------------ |
+| T1      | Malla: Σ A·r̄ = ∫ r dA exacto, grupos de frontera, orientación, refinamiento | 1e-16                                |
+| T2      | Matrices elementales frente a cuadratura de alto orden                       | 1e-12                                |
+| T3      | Flujo de fricción: 2π ∫ q r dr = γ P_f                                       | 1e-16                                |
+| T4 / T5 | Balance de energía / estado uniforme                                         | ~1e-14 / 9e-14                       |
+| T6      | Modo propio axisimétrico (Bessel J0), nx = 10…80                             | 0,86 → 0,03 %                        |
+| T7      | Medio semi-infinito, flujo lineal en t                                       | θ = 1: 0,4 %; CN + Rannacher: 0,07 % |
+| T8 / T9 | Caso de referencia y cota energética                                         | 102,30 °C en 3,39 s; 47,3 ≤ 48,1 K   |
 
 Estudios: la malla converge con ε < 1 % desde el segundo nivel (0,18 → 0,067 → 0,013 %), y en Δt
 el orden observado es 1,00 para θ = 1. Detalles en `reportes/`.
