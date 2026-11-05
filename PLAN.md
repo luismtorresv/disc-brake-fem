@@ -500,9 +500,11 @@ hay que recalcularlos, no ajustarlos.
   Catálogo: hierro fundido, pastilla y forro de Limpert (Tabla 3-1A, verificados) y preset
   `car`; `configs/ejemplo_auto.yaml` sin materiales no verificados (T_max = 106,70 °C). 231 passed.
   Acero AISI 410 (ficha Chilexpo; verified: false por error de unidad en c_p y densidad
-  dudosa) y preset `motorcycle` (solo disco; la config debe nombrar la pastilla). 233 passed.
-  PENDIENTE: pastilla sinterizada con fuente; contrastar el 410 con ficha de fabricante;
-  datos de geometría/vehículo de moto para un `ejemplo_moto.yaml`.
+  dudosa) y pastilla sinterizada de Goo y Na 2014 (verified: false; valores de entrada de un
+  FEM ferroviario; el ASM Vol. 7 no tiene datos térmicos de pastillas). Preset `motorcycle` =
+  410 + sinterizada (γ = 0,565). 235 passed.
+  PENDIENTE: contrastar 410 y pastilla con fuentes medidas; barrido de sensibilidad de la
+  pastilla; datos de geometría/vehículo de moto para un `ejemplo_moto.yaml`.
   Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`,
-  `reportes/F7_T3_acero-410-preset-moto.md`.
+  `reportes/F7_T3_acero-410-preset-moto.md`, `reportes/F7_T4_pastilla-sinterizada-preset-moto.md`.
 - [ ] Fase 8 — Documentación

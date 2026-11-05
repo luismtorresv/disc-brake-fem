@@ -387,17 +387,40 @@ def test_stainless_410_entry_from_datasheet():
     assert not m.verified and "S41000" in m.source
 
 
-def test_motorcycle_preset_requires_explicit_pad():
+def test_sintered_pad_entry_goo2014():
+    """Goo y Na (2014), Tabla 1 'Friction pin': ρ = 5,4 g/cm³, c = 418, k = 24 (no verificado)."""
+    m = load_library(ROOT / "configs" / "materiales.yaml")["sintered_pad_goo2014"]
+    assert (m.k, m.rho, m.cp) == (24.0, 5400.0, 418.0)
+    assert not m.verified and "10.9725/kstle.2014.30.3.177" in m.source
+
+
+def test_motorcycle_preset():
+    """Preset de moto: disco AISI 410 + pastilla sinterizada; ambos se advierten como no
+    verificados y γ = e_410 / (e_410 + e_pastilla)."""
     raw = yaml.safe_load(REF.read_text("utf-8"))
     raw["materials"] = {"library": "configs/materiales.yaml", "preset": "motorcycle"}
-    ov = {"mesh.backend": "structured", "time.t_end": 6.0}
-    with pytest.raises(ValueError, match="preset 'motorcycle' no la define"):
-        run(raw, ov, write=False)
-    raw["materials"]["pad"] = "pad_limpert"
     with warnings.catch_warnings(record=True) as rec:
         warnings.simplefilter("always")
-        res = run(raw, ov, write=False)
+        res = run(raw, {"mesh.backend": "structured", "time.t_end": 6.0}, write=False)
     assert res.materials["disc"].name == "stainless_steel_410"
-    assert res.summary["unverified_materials"] == ["stainless_steel_410"]
-    assert any("stainless_steel_410" in str(w.message) for w in rec)
-    assert res.gamma == pytest.approx(0.8164, abs=1e-4)
+    assert res.pad.name == "sintered_pad_goo2014"
+    assert res.summary["unverified_materials"] == ["stainless_steel_410", "sintered_pad_goo2014"]
+    assert any("sintered_pad_goo2014" in str(w.message) for w in rec)
+    d, p = res.materials["disc"], res.pad
+    assert res.gamma == pytest.approx(d.effusivity / (d.effusivity + p.effusivity), rel=1e-12)
+    assert res.gamma == pytest.approx(0.5646, abs=1e-4)
+
+
+def test_preset_without_pad_needs_explicit_pad(tmp_path):
+    """Un preset sin pastilla (permitido en la librería) exige materials.pad con gamma: auto."""
+    lib = tmp_path / "lib.yaml"
+    entry = {"k": 26.9, "rho": 7800.0, "cp": 460.0, "source": "prueba", "verified": True}
+    lib.write_text(yaml.safe_dump({"materials": {"acero": entry, "pastilla": {**entry, "k": 1.0}},
+                                   "presets": {"solo_disco": {"disc": "acero"}}}), "utf-8")
+    raw = yaml.safe_load(REF.read_text("utf-8"))
+    raw["materials"] = {"library": str(lib), "preset": "solo_disco"}
+    ov = {"mesh.backend": "structured", "time.t_end": 6.0}
+    with pytest.raises(ValueError, match="preset 'solo_disco' no la define"):
+        run(raw, ov, write=False)
+    raw["materials"]["pad"] = "pastilla"
+    assert run(raw, ov, write=False).pad.name == "pastilla"
