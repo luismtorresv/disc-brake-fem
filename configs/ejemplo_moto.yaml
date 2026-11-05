@@ -1,0 +1,72 @@
+# Motocicleta: frenada de 100 km/h a 0 con el freno delantero, disco flotante de acero inoxidable.
+# Moto de referencia: Yamaha MT-07 (2024). Cada valor indica si tiene FUENTE o es SUPUESTO.
+#
+#  FUENTE  2 discos delanteros Ø 298 mm (ficha oficial Yamaha MT-07 2024,
+#          https://www.yamahamotorsports.com/models/mt-07/specs).
+#  FUENTE  masa en orden de marcha ≈ 184 kg (fuentes secundarias, p. ej. moto-data.net, MT-07
+#          2023; la ficha oficial no da el número).
+#  FUENTE  espesor del disco 4,5 mm (disco de reemplazo Brembo Supersport 298 mm para Yamaha,
+#          catálogo de distribuidor) ⇒ semiespesor 2,25 mm.
+#  SUPUESTO ancho del anillo de frenado 35 mm (solo se encontraron 30 mm en discos de carreras de
+#          otros diámetros) y pista de la pastilla de 30 mm centrada en el anillo.
+#  SUPUESTO piloto de 80 kg; fracción de frenado delantera φ = 0,8; desaceleración 0,8 g.
+#  SUPUESTO h = 40 W/(m²·K) y T0 = T∞ = 25 °C, iguales al caso auto para poder comparar.
+#  MATERIALES preset `motorcycle`: AISI 410 + pastilla sinterizada de cobre (ambos NO
+#          verificados; ver configs/materiales.yaml).
+#
+# Modelo: solo el anillo flotante de acero (r 0,114–0,149 m); el porta-disco de aluminio,
+# unido por remaches, no se modela (su conducción por los remaches se desprecia).
+case: ejemplo_moto_mt07_100kmh
+
+geometry:
+  type: rectangle
+  r_inner: 0.114             # m, = 0,149 − 0,035 (anillo de 35 mm, SUPUESTO)
+  r_outer: 0.149             # m, Ø 298 mm (FUENTE)
+  half_thickness: 0.00225    # m, espesor 4,5 mm (FUENTE)
+  track: {r_a: 0.1165, r_b: 0.1465}   # pista de 30 mm centrada en el anillo (SUPUESTO)
+  axisymmetric: true
+
+mesh:
+  backend: gmsh
+  refine_factor: 2.0         # ver configs/estudio_moto.yaml (la malla converge desde rf = 1)
+  size_track: 3.0e-4
+  size_far: 1.0e-3           # disco 4,4 veces más delgado que el del auto ⇒ tamaños menores
+  grading_distance: 0.003
+
+materials:
+  library: configs/materiales.yaml
+  preset: motorcycle         # stainless_steel_410 + sintered_pad_cu_zhou2024
+
+boundaries:
+  brake: flux
+  top_inner: convection
+  top_outer: convection
+  r_inner: convection
+  r_outer: convection
+  symmetry: insulated
+
+convection: {h: 40.0, T_inf: 25.0}
+initial: {T0: 25.0}
+
+load:
+  type: braking
+  vehicle:
+    mass: 264.0              # kg = 184 (moto, FUENTE) + 80 (piloto, SUPUESTO)
+    v0: 27.78                # m/s = 100 km/h
+    decel: 7.848             # m/s² = 0,8 g (SUPUESTO)
+    brake_fraction: 0.8      # fracción de la frenada en el eje delantero (SUPUESTO)
+    discs_per_axle: 2        # FUENTE (2 discos delanteros)
+    faces_per_disc: 2
+  pressure_profile: uniform_wear
+  gamma: auto
+
+time:
+  theta: 0.5
+  rannacher_steps: 2
+  dt: auto                   # t_f/100
+  t_end: 60.0
+
+output:
+  dir: results/ejemplo_moto
+  probes: [[0.1315, 0.00225], [0.1315, 0.0]]   # centro de la pista: superficie y plano medio
+  formats: [csv, vtk, png]

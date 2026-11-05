@@ -506,11 +506,12 @@ hay que recalcularlos, no ajustarlos.
   Barrido de pastilla (`configs/estudio_pastilla.yaml`, figura `gamma_map.pdf`): T − T0 es
   exactamente proporcional a γ (dispersión ~1e-14); con el 410 el pico va de 80,9 a 119,4 °C
   según la pastilla. 240 passed.
-  PENDIENTE: contrastar 410 y pastilla con fuentes medidas; barrido de sensibilidad de la
-  pastilla; datos de geometría/vehículo de moto para un `ejemplo_moto.yaml`.
+  Caso de moto `configs/ejemplo_moto.yaml` (MT-07: 2 × Ø 298 × 4,5 mm, 264 kg; supuestos
+  marcados) y `estudio_moto.yaml`: T_max = 76,7 °C, malla p = 1,9, Δt p = 2,1. 243 passed.
+  PENDIENTE: contrastar 410 y pastillas sinterizadas con fuentes medidas.
   Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`,
   `reportes/F7_T3_acero-410-preset-moto.md`, `reportes/F7_T4_pastilla-sinterizada-preset-moto.md`,
-  `reportes/F7_T5_pastilla-cobre-zhou2024.md`, `reportes/F7_T6_barrido-pastilla.md`.
+  `reportes/F7_T5_pastilla-cobre-zhou2024.md`, `reportes/F7_T6_barrido-pastilla.md`, `reportes/F7_T7_caso-moto.md`.
 - [x] Fase 8 — Documentación (2026-11-05). `README.md` (instalación Windows/Linux, comandos,
   YAML, materiales, salidas, validación) y `requirements-lock.txt` (pip freeze). Verificado en
   dos entornos limpios (Windows, Python 3.13): `pip install -e ".[dev]"` → 240 passed; desde el

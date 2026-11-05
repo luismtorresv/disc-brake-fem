@@ -1,0 +1,31 @@
+# Estudios del caso de motocicleta (configs/ejemplo_moto.yaml):
+#   - malla (rf 1, 2, 4) y Δt (Δt, Δt/2, Δt/4): ¿el resultado depende de la discretización?
+#   - ancho del anillo (SUPUESTO en el caso base: 35 mm): ¿cuánto pesa ese supuesto?
+#   - pastilla: las tres del catálogo con el disco AISI 410.
+# Ejecutar:  python -m discfem study configs/estudio_moto.yaml
+study:
+  name: estudio_moto
+  base: configs/ejemplo_moto.yaml
+  base_overrides:
+    output.formats: []
+  output_dir: results/estudio_moto
+
+  mesh:
+    refine_factors: [1, 2, 4]
+    tolerance_percent: 1.0
+  use_selected_mesh: true
+  timestep:
+    factors: [1, 2, 4]
+
+  sweeps:
+    - name: ancho_anillo
+      key: geometry.r_inner
+      label: "r_i [m] (anillo de 33,5 / 35 / 40 / 45 mm)"
+      title: "Moto: sensibilidad al ancho del anillo (supuesto); pista fija de 30 mm"
+      values: [0.1155, 0.114, 0.109, 0.104]
+
+    - name: pastillas_moto
+      key: materials.pad
+      label: "pastilla"
+      title: "Moto (disco AISI 410): efecto de la pastilla"
+      values: [pad_limpert, sintered_pad_goo2014, sintered_pad_cu_zhou2024]
