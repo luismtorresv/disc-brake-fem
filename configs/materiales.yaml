@@ -1,0 +1,20 @@
+# Librería de materiales (PLAN.md §4). Cada entrada OBLIGA a `source` y `verified`.
+# Mientras `verified: false`, cada corrida imprime una advertencia con la lista.
+# Los valores siguientes son los SUPUESTOS DEL PROTOTIPO del PLAN: no tienen fuente todavía.
+# Para el informe hay que reemplazarlos por valores con referencia y poner verified: true.
+
+gray_cast_iron:
+  description: Hierro fundido gris (disco)
+  k: 50.0          # W/(m·K)   SUPUESTO DEL PROTOTIPO
+  rho: 7200.0      # kg/m³     SUPUESTO DEL PROTOTIPO
+  cp: 460.0        # J/(kg·K)  SUPUESTO DEL PROTOTIPO
+  source: "PENDIENTE: citar fuente"
+  verified: false
+
+organic_pad:
+  description: Pastilla orgánica (solo efusividad para γ)
+  k: 1.5           # W/(m·K)   SUPUESTO DEL PROTOTIPO
+  rho: 2500.0      # kg/m³     SUPUESTO DEL PROTOTIPO
+  cp: 1000.0       # J/(kg·K)  SUPUESTO DEL PROTOTIPO
+  source: "PENDIENTE: citar fuente"
+  verified: false

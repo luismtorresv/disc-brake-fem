@@ -474,7 +474,11 @@ hay que recalcularlos, no ajustarlos.
   2 pasos Rannacher (tabla T7 con Δt = t_f/100: 1,5 % frente a 3,5 % con θ = 1 y 6 % con CN).
   Ojo: θ = 1 con Δt = t_f/100 mete un 1 % menos de energía (regla del extremo derecho).
   101 passed. Reporte: `reportes/F3_T1_integracion-temporal.md`.
-- [ ] Fase 4 — Cargas y materiales
+- [x] Fase 4 — Cargas y materiales (2026-11-05). `loads.py` (braking, constant_flux, table;
+  q = f(t)·s(r), F_brake ensamblado una vez) y `materials.py` (source/verified obligatorios,
+  overrides ⇒ no verificado, γ auto desde la región bajo brake, advertencias). T3 pasa a 1e-12;
+  γ = 0,8692, q0 = 764 kW/m², E_cara = 101 kJ. Pendiente para la Fase 5: llamar a
+  `warn_unverified` al inicio de `run`. 149 passed. Reporte: `reportes/F4_T1_cargas-materiales.md`.
 - [ ] Fase 5 — Configuración, CLI y salidas
 - [ ] Fase 6 — Convergencia y estudios paramétricos
 - [ ] Fase 7 — Generalización (opcional)
