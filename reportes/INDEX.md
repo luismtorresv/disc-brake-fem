@@ -17,3 +17,4 @@
 | 2026-11-05 | 7 | T6 — Barrido de pastilla (estudio_pastilla, figura γ) | [F7_T6_barrido-pastilla.md](F7_T6_barrido-pastilla.md) | completa (240 passed) |
 | 2026-11-05 | 8 | T1 — README, requirements-lock y verificación en entorno limpio | [F8_T1_documentacion-reproducibilidad.md](F8_T1_documentacion-reproducibilidad.md) | completa (240 passed en 2 entornos limpios); Linux no verificado |
 | 2026-11-05 | 7 | T7 — Caso de moto con su geometría (MT-07) y su estudio | [F7_T7_caso-moto.md](F7_T7_caso-moto.md) | completa (243 passed); supuestos y materiales no verificados declarados |
+| 2026-11-05 | 6 | T2 — Estudio de malla y barridos sobre ejemplo_auto; sensibilidad a h (auto y moto); pendientes registrados | [F6_T2_estudio-auto-y-h.md](F6_T2_estudio-auto-y-h.md) | completa (243 passed) |

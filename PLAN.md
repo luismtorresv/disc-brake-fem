@@ -486,7 +486,9 @@ hay que recalcularlos, no ajustarlos.
   salvo `compute_time_s`. Ojo: la referencia de T8 refleja θ = 1; con CN + Rannacher,
   T(60 s) = 72,8028 °C, fuera de 72,3 ± 0,5 por 0,003 °C. 174 passed.
   Reporte: `reportes/F5_T1_config-solver-salidas.md`.
-- [x] Fase 6 — Convergencia y estudios paramétricos (2026-11-05). `convergence.py` +
+- [x] Fase 6 — Convergencia y estudios paramétricos (2026-11-05). Repetido sobre el caso
+  principal (`configs/estudio_auto.yaml`, reporte F6_T2), con barrido de h también en el caso
+  moto. Estudio original (caso de referencia): `convergence.py` +
   `python -m discfem study configs/estudio_malla.yaml` (27 s). Malla: ε = 0,18 → 0,067 →
   0,013 % (rf 1→8), nivel seleccionado rf = 2. Δt: p = 1,001 (θ = 1); Richardson da
   T(60 s) ≈ 72,81 °C, igual que CN + Rannacher. Barridos a, v0, m crecientes; k del disco solo
@@ -517,3 +519,38 @@ hay que recalcularlos, no ajustarlos.
   dos entornos limpios (Windows, Python 3.13): `pip install -e ".[dev]"` → 240 passed; desde el
   lock → 240 passed, `pip check` sin conflictos. Linux no verificado.
   Reporte: `reportes/F8_T1_documentacion-reproducibilidad.md`.
+
+---
+
+## PENDIENTES (registrados el 2026-11-05; los datos se mantienen como están por ahora)
+
+**Datos sin fuente o sin verificar** (no cambian el código; sí la validez de los resultados):
+1. **Acero AISI 410** (`stainless_steel_410`): la ficha de Chilexpo tiene c_p con unidad errónea y
+   una densidad atípica (7363 kg/m³ frente a ≈ 7750 en otras fuentes). Contrastar con una ficha de
+   fabricante (ATI, Outokumpu) o con el ASM Handbook. Reporte F7_T3.
+2. **Pastilla sinterizada** (`sintered_pad_cu_zhou2024`): c no medido (viene de un valor de
+   entrada de un FEM de Goo y Na, 2014); ambas fuentes son de trenes. Buscar una medición de c_p
+   (DSC) de un material de fricción sinterizado de cobre. Es el dato que más pesa: según la
+   pastilla, el pico de la moto va de 77 a 112 °C. Reportes F7_T4–F7_T6.
+3. **Coeficiente de convección h = 40 W/(m²·K)**: supuesto del PLAN en todos los casos. El
+   barrido (F6_T2) muestra que no afecta el pico, pero sí la temperatura final (auto: +2 / −6,5 %;
+   moto: +5,5 / −18 % del aumento para h = 10…160). Si se quiere un valor con fuente: correlación
+   de convección (Incropera) con la velocidad del vehículo.
+4. **Supuestos del caso de moto**: ancho del anillo (barrido hecho: no afecta el pico), piloto
+   80 kg, φ = 0,8, desaceleración 0,8 g. Reporte F7_T7.
+5. **Vehículo del caso auto** (m, φ, a, n_d): supuestos del PLAN (§4), sin fuente.
+
+**Para el informe:**
+6. Explicar el sesgo de la referencia de T8: 72,3 °C sale de θ = 1 con Δt = t_f/100; el valor
+   convergido es ≈ 72,8 °C (Richardson y CN + Rannacher coinciden). Reportes F5_T1 y F6_T1.
+7. `Anteproyecto.tex`: siguen sin corregir las 4 inconsistencias de la Fase 0; además dice
+   "material homogéneo" y no menciona perfiles, regiones, el caso moto ni las pastillas
+   sinterizadas.
+8. Redactar el informe final; las figuras y tablas sugeridas están en la sección 8 de cada reporte.
+
+**Menores u opcionales:**
+9. Instalación no verificada en Linux ni con Python 3.10–3.12 (F8_T1).
+10. Frenadas repetidas (opcional en el PLAN; relevante para el disco delgado de moto).
+11. Cosméticos: una etiqueta encimada en `gamma_map` (panel derecho); espacio en blanco a la
+    izquierda en `field.png` del perfil.
+12. `prompt.txt` vacío y sin versionar: se puede borrar.

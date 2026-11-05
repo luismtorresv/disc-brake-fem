@@ -1,0 +1,49 @@
+# Estudio de convergencia y barridos del CASO PRINCIPAL (configs/ejemplo_auto.yaml: materiales
+# verificados de Limpert, θ = 1/2 + 2 Rannacher). Repite la Fase 6 (que se hizo sobre el caso de
+# referencia con materiales supuestos y θ = 1, configs/estudio_malla.yaml) y añade un barrido
+# del coeficiente de convección h, que no tiene fuente (supuesto del PLAN: h = 40 W/(m²·K)).
+#
+# Ejecutar:  python -m discfem study configs/estudio_auto.yaml
+study:
+  name: estudio_auto
+  base: configs/ejemplo_auto.yaml
+  base_overrides:
+    output.formats: []
+  output_dir: results/estudio_auto
+
+  mesh:
+    refine_factors: [1, 2, 4, 8]
+    tolerance_percent: 1.0
+  use_selected_mesh: true
+  timestep:
+    factors: [1, 2, 4]
+
+  sweeps:
+    - name: desaceleracion
+      key: load.vehicle.decel
+      label: "a [m/s²]"
+      title: "Auto: barrido de desaceleración (misma energía, frenada más corta)"
+      values: [3.0, 4.0, 5.0, 6.0, 7.0]
+    - name: velocidad_inicial
+      key: load.vehicle.v0
+      label: "v0 [m/s]"
+      title: "Auto: barrido de velocidad inicial (60, 80, 100, 120 km/h)"
+      values: [16.67, 22.22, 27.78, 33.33]
+    - name: masa
+      key: load.vehicle.mass
+      label: "m [kg]"
+      title: "Auto: barrido de masa del vehículo"
+      values: [1000.0, 1250.0, 1500.0, 1750.0, 2000.0]
+    # SENSIBILIDAD a k del disco (±20 % del valor de Limpert, 48,46 W/(m·K)). No son materiales
+    # reales: van como override y quedan marcados como no verificados.
+    - name: conductividad_disco
+      key: materials.overrides.disc.k
+      label: "k disco [W/(m·K)]"
+      title: "Auto: sensibilidad a k del disco (±20 % del valor de Limpert)"
+      values: [38.77, 48.4625, 58.155]
+    # SENSIBILIDAD a h (sin fuente; el caso usa 40 W/(m²·K) en todas las caras expuestas).
+    - name: conveccion_h
+      key: convection.h
+      label: "h [W/(m²·K)]"
+      title: "Auto: sensibilidad al coeficiente de convección h (supuesto)"
+      values: [10.0, 20.0, 40.0, 80.0, 160.0]

@@ -110,9 +110,10 @@ Archivos de configuración incluidos:
 | `configs/ejemplo_frenado.yaml` | Caso de referencia del PLAN (materiales SUPUESTOS del prototipo, θ = 1). Define las pruebas T8 y T9; no usar para resultados. |
 | `configs/ejemplo_auto.yaml` | Automóvil a 100 km/h con materiales verificados (preset `car`, Limpert), malla rf = 2, θ = 1/2 + 2 Rannacher. **Caso principal.** |
 | `configs/ejemplo_moto.yaml` | Motocicleta (Yamaha MT-07 de referencia): disco flotante Ø 298 × 4,5 mm, preset `motorcycle`. Cada dato indica si tiene fuente o es supuesto. |
-| `configs/estudio_moto.yaml` | Malla, Δt, ancho del anillo (supuesto) y pastilla para el caso de moto. |
+| `configs/estudio_moto.yaml` | Malla, Δt, ancho del anillo (supuesto), h y pastilla para el caso de moto. |
 | `configs/ejemplo_perfil.yaml` | Sección poligonal (cubo interior más grueso) y h distinto en `r_outer`. |
-| `configs/estudio_malla.yaml` | Estudio de malla (rf 1, 2, 4, 8), de Δt (Δt, Δt/2, Δt/4) y barridos de a, v0, m y k. |
+| `configs/estudio_malla.yaml` | Fase 6 sobre el caso de referencia: malla (rf 1, 2, 4, 8), Δt y barridos de a, v0, m y k. |
+| `configs/estudio_auto.yaml` | Lo mismo sobre el **caso principal** (`ejemplo_auto.yaml`), más un barrido de h. **Usar este para el informe.** |
 | `configs/estudio_pastilla.yaml` | Pastillas del catálogo con disco de hierro y de acero 410, y barrido de γ. |
 | `configs/materiales.yaml` | Librería de materiales y presets por tipo de vehículo. |
 
