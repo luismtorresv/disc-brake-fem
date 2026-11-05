@@ -29,8 +29,14 @@
 #   sinterizado (el ASM Handbook Vol. 7 y las fichas de SBS/Brembo no los dan). verified: false
 #   porque (1) son valores de ENTRADA de un modelo FEM, el artículo no dice que se midieran ni
 #   cita su origen; (2) c = 418 J/(kg·K) es idéntico al del disco de acero de la misma tabla
-#   (posible copia); (3) la aplicación es ferroviaria, no de motocicleta. Se usa en el preset
-#   `motorcycle` como la aproximación más cercana disponible a una pastilla sinterizada.
+#   (posible copia); (3) la aplicación es ferroviaria. YA NO se usa en el preset `motorcycle`
+#   (reemplazada por sintered_pad_cu_zhou2024); se conserva porque esa entrada toma de aquí c.
+#
+# sintered_pad_cu_zhou2024: HÍBRIDA. k y ρ MEDIDOS por Zhou et al. (2024), muestra S800
+#   (compuesto sinterizado de matriz de cobre para pastillas; Cu 57, Fe 16, grafito 9, Cr3Fe 6,
+#   Fe3Al 6, Sn 4, MoS2 2 % en peso), leídos de su Figura 6 (gráfica; ver `source`). El artículo
+#   NO mide c: se toma c = 418 J/(kg·K) de Goo y Na (2014). verified: false (dos fuentes,
+#   valores digitalizados de una gráfica, c no medido, aplicación ferroviaria).
 
 materials:
   gray_cast_iron_limpert:
@@ -65,6 +71,14 @@ materials:
     source: "Goo, B.-C. y Na, I.-K., 'Topology Optimization of Railway Brake Pad by Contact Analysis', J. Korean Soc. Tribol. Lubr. Eng. 30(3):177-182, 2014, DOI 10.9725/kstle.2014.30.3.177, Tabla 1 'Friction pin'. Valores de entrada de un modelo FEM (no medidos ni referenciados en el artículo); c igual al del disco de acero de la misma tabla; aplicación ferroviaria."
     verified: false
 
+  sintered_pad_cu_zhou2024:
+    description: Pastilla sinterizada de matriz de cobre (k y ρ medidos, Zhou et al. 2024; c de Goo y Na 2014)
+    k: 45.1          # W/(m·K), S800, Fig. 6 (digitalizado; barra de error ≈ ±3)
+    rho: 5520.0      # kg/m³ (5,520 g/cm³), S800, Fig. 6 (digitalizado; eje rotulado 'g·cm⁻¹', errata por g·cm⁻³)
+    cp: 418.0        # J/(kg·K), de Goo y Na (2014), Tabla 1 'Friction pin' (Zhou no mide c)
+    source: "k y ρ: Zhou, Y.; Zhang, Y.; Zhang, X.; Liu, J.; Wang, M., 'Effect of Sintering Temperature on the Microstructure and Mechanical and Tribological Properties of Copper Matrix Composite for Brake Pads', Metals 14:1048, 2024, DOI 10.3390/met14091048, Figura 6, muestra S800 (k medido con TC3000E, densidad por Arquímedes); valores digitalizados de la gráfica (k = 45 + 2/262,5·15 px; ρ = 5,538 − 64,5/256·0,071 g/cm³). c: Goo y Na (2014), DOI 10.9725/kstle.2014.30.3.177, Tabla 1 (valor de entrada de un FEM, no medido). Ambas fuentes son de pastillas de tren de alta velocidad."
+    verified: false
+
   lining_limpert:
     description: Forro de freno de tambor (base asbesto), valores de diseño de Limpert
     k: 1.1594444444444445   # W/(m·K) = 4174 N·m/(h·K·m) / 3600
@@ -95,6 +109,6 @@ presets:
     disc: gray_cast_iron_limpert
     pad: pad_limpert
   motorcycle:
-    description: Motocicleta, disco de acero inoxidable AISI 410 y pastilla sinterizada (Goo y Na 2014; ambos sin verificar)
+    description: Motocicleta, disco de acero inoxidable AISI 410 y pastilla sinterizada de cobre (k, ρ de Zhou 2024; c de Goo 2014; ambos sin verificar)
     disc: stainless_steel_410
-    pad: sintered_pad_goo2014
+    pad: sintered_pad_cu_zhou2024

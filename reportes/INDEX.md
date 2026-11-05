@@ -13,3 +13,4 @@
 | 2026-11-05 | 7 | T2 — Catálogo de materiales con fuente (Limpert), preset car, ejemplo_auto | [F7_T2_catalogo-materiales-limpert.md](F7_T2_catalogo-materiales-limpert.md) | completa (231 passed); preset motorcycle pendiente de fuente |
 | 2026-11-05 | 7 | T3 — Acero AISI 410 y preset motorcycle | [F7_T3_acero-410-preset-moto.md](F7_T3_acero-410-preset-moto.md) | completa (233 passed); 410 no verificado; pastilla sinterizada pendiente |
 | 2026-11-05 | 7 | T4 — Pastilla sinterizada (Goo y Na 2014) y preset motorcycle | [F7_T4_pastilla-sinterizada-preset-moto.md](F7_T4_pastilla-sinterizada-preset-moto.md) | completa (235 passed); pastilla y disco de moto no verificados |
+| 2026-11-05 | 7 | T5 — Pastilla de cobre (Zhou 2024 + c de Goo 2014) en preset motorcycle | [F7_T5_pastilla-cobre-zhou2024.md](F7_T5_pastilla-cobre-zhou2024.md) | completa (236 passed); pastilla híbrida no verificada |

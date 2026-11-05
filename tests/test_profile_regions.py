@@ -394,21 +394,32 @@ def test_sintered_pad_entry_goo2014():
     assert not m.verified and "10.9725/kstle.2014.30.3.177" in m.source
 
 
+def test_sintered_pad_cu_zhou2024_entry():
+    """k y ρ digitalizados de Zhou et al. (2024), Fig. 6, S800; c de Goo y Na (2014)."""
+    lib = load_library(ROOT / "configs" / "materiales.yaml")
+    m = lib["sintered_pad_cu_zhou2024"]
+    assert (m.k, m.rho) == (45.1, 5520.0)
+    assert m.cp == lib["sintered_pad_goo2014"].cp == 418.0
+    assert not m.verified
+    assert "10.3390/met14091048" in m.source and "10.9725/kstle.2014.30.3.177" in m.source
+
+
 def test_motorcycle_preset():
-    """Preset de moto: disco AISI 410 + pastilla sinterizada; ambos se advierten como no
-    verificados y γ = e_410 / (e_410 + e_pastilla)."""
+    """Preset de moto: disco AISI 410 + pastilla sinterizada de cobre (Zhou 2024 / Goo 2014);
+    ambos se advierten como no verificados y γ = e_410 / (e_410 + e_pastilla)."""
     raw = yaml.safe_load(REF.read_text("utf-8"))
     raw["materials"] = {"library": "configs/materiales.yaml", "preset": "motorcycle"}
     with warnings.catch_warnings(record=True) as rec:
         warnings.simplefilter("always")
         res = run(raw, {"mesh.backend": "structured", "time.t_end": 6.0}, write=False)
     assert res.materials["disc"].name == "stainless_steel_410"
-    assert res.pad.name == "sintered_pad_goo2014"
-    assert res.summary["unverified_materials"] == ["stainless_steel_410", "sintered_pad_goo2014"]
-    assert any("sintered_pad_goo2014" in str(w.message) for w in rec)
+    assert res.pad.name == "sintered_pad_cu_zhou2024"
+    assert res.summary["unverified_materials"] == ["stainless_steel_410",
+                                                   "sintered_pad_cu_zhou2024"]
+    assert any("sintered_pad_cu_zhou2024" in str(w.message) for w in rec)
     d, p = res.materials["disc"], res.pad
     assert res.gamma == pytest.approx(d.effusivity / (d.effusivity + p.effusivity), rel=1e-12)
-    assert res.gamma == pytest.approx(0.5646, abs=1e-4)
+    assert res.gamma == pytest.approx(0.4834, abs=1e-4)
 
 
 def test_preset_without_pad_needs_explicit_pad(tmp_path):
