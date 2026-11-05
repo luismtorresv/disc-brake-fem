@@ -1,0 +1,26 @@
+# Versiones exactas con las que se validó discfem (Python 3.13.3, Windows 10, 2026-11-05).
+# Uso: pip install -r requirements-lock.txt && pip install -e . --no-deps
+colorama==0.4.6
+contourpy==1.4.0
+cycler==0.12.1
+fonttools==4.68.0
+gmsh==4.15.2
+iniconfig==2.3.1
+kiwisolver==1.5.1
+markdown-it-py==4.2.0
+matplotlib==3.11.2
+mdurl==0.1.2
+meshio==5.3.5
+numpy==2.5.4
+packaging==26.3
+pillow==13.0.0
+pluggy==1.7.0
+Pygments==2.21.0
+pyparsing==3.3.3
+pytest==9.2.0
+python-dateutil==4.0.0
+PyYAML==6.0.3
+rich==15.0.0
+ruff==0.17.3
+scipy==1.18.1
+tzdata==2026.6

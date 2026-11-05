@@ -511,4 +511,8 @@ hay que recalcularlos, no ajustarlos.
   Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`,
   `reportes/F7_T3_acero-410-preset-moto.md`, `reportes/F7_T4_pastilla-sinterizada-preset-moto.md`,
   `reportes/F7_T5_pastilla-cobre-zhou2024.md`, `reportes/F7_T6_barrido-pastilla.md`.
-- [ ] Fase 8 — Documentación
+- [x] Fase 8 — Documentación (2026-11-05). `README.md` (instalación Windows/Linux, comandos,
+  YAML, materiales, salidas, validación) y `requirements-lock.txt` (pip freeze). Verificado en
+  dos entornos limpios (Windows, Python 3.13): `pip install -e ".[dev]"` → 240 passed; desde el
+  lock → 240 passed, `pip check` sin conflictos. Linux no verificado.
+  Reporte: `reportes/F8_T1_documentacion-reproducibilidad.md`.

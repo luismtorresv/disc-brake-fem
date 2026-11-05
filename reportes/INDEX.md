@@ -15,3 +15,4 @@
 | 2026-11-05 | 7 | T4 — Pastilla sinterizada (Goo y Na 2014) y preset motorcycle | [F7_T4_pastilla-sinterizada-preset-moto.md](F7_T4_pastilla-sinterizada-preset-moto.md) | completa (235 passed); pastilla y disco de moto no verificados |
 | 2026-11-05 | 7 | T5 — Pastilla de cobre (Zhou 2024 + c de Goo 2014) en preset motorcycle | [F7_T5_pastilla-cobre-zhou2024.md](F7_T5_pastilla-cobre-zhou2024.md) | completa (236 passed); pastilla híbrida no verificada |
 | 2026-11-05 | 7 | T6 — Barrido de pastilla (estudio_pastilla, figura γ) | [F7_T6_barrido-pastilla.md](F7_T6_barrido-pastilla.md) | completa (240 passed) |
+| 2026-11-05 | 8 | T1 — README, requirements-lock y verificación en entorno limpio | [F8_T1_documentacion-reproducibilidad.md](F8_T1_documentacion-reproducibilidad.md) | completa (240 passed en 2 entornos limpios); Linux no verificado |
