@@ -464,7 +464,10 @@ hay que recalcularlos, no ajustarlos.
   `mesh` con figura. T1 pasa en ambos backends (51 passed). Para Gmsh, "celda más pequeña toca
   brake" se prueba como "a < 2·h_min de brake + área media 10× menor que en el fondo" (ver
   reporte). Reporte: `reportes/F1_T1_malla.md`.
-- [ ] Fase 2 — Núcleo FEM
+- [x] Fase 2 — Núcleo FEM (2026-11-05). `fem/assembly.py`: M, K (peso r o 1), H y F (Gauss 3
+  puntos) vectorizados, propiedades por región. T2 pasa a 1e-12; T6 da 0,86 / 0,31 / 0,10 /
+  0,030 % para nx = 10/20/40/80 (igual al prototipo). T6 usa un bucle CN propio hasta que exista
+  `timestepping.py`. 74 passed. Reporte: `reportes/F2_T1_ensamblaje-fem.md`.
 - [ ] Fase 3 — Integración temporal y validación
 - [ ] Fase 4 — Cargas y materiales
 - [ ] Fase 5 — Configuración, CLI y salidas
