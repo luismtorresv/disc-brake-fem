@@ -5,3 +5,4 @@
 | 2026-11-04 | 0 | T1 — Inspección y arranque | [F0_T1_inspeccion-arranque.md](F0_T1_inspeccion-arranque.md) | completa (7 passed) |
 | 2026-11-05 | 1 | T1 — Malla (Mesh, structured, gmsh, CLI mesh) | [F1_T1_malla.md](F1_T1_malla.md) | completa (51 passed) |
 | 2026-11-05 | 2 | T1 — Ensamblaje FEM (M, K, H, F) + T2, T6 | [F2_T1_ensamblaje-fem.md](F2_T1_ensamblaje-fem.md) | completa (74 passed) |
+| 2026-11-05 | 3 | T1 — Integración temporal + T4, T5, T7 | [F3_T1_integracion-temporal.md](F3_T1_integracion-temporal.md) | completa (101 passed) |

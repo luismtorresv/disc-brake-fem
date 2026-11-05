@@ -114,14 +114,18 @@ class Mesh:
             raise ValueError("Hay triángulos con área ≤ 0 (orientación horaria o degenerados).")
         if np.setdiff1d(np.arange(self.n_nodes), self.tris.ravel()).size:
             raise ValueError("Hay nodos que no pertenecen a ningún triángulo.")
-        missing = [g for g in groups if g not in self.edges or len(self.edges[g]) == 0]
+        # Un grupo puede estar vacío (p. ej. T7: `brake` cubre toda la cara superior y
+        # top_inner/top_outer no tienen aristas), pero la clave debe existir.
+        missing = [g for g in groups if g not in self.edges]
         if missing:
-            raise ValueError(f"Grupos de frontera vacíos o ausentes: {missing}.")
+            raise ValueError(f"Grupos de frontera ausentes: {missing}.")
         extra = set(self.edges) - set(groups)
         if extra:
             raise ValueError(f"Grupos de frontera no reconocidos: {sorted(extra)}.")
         bnd = boundary_edges(self.tris)
-        all_keys = np.concatenate([_edge_keys(self.edges[g], self.n_nodes) for g in groups])
+        all_keys = np.concatenate(
+            [_edge_keys(np.reshape(self.edges[g], (-1, 2)), self.n_nodes) for g in groups]
+        )
         if np.unique(all_keys).size != all_keys.size:
             raise ValueError("Una arista de borde aparece en más de un grupo (o repetida).")
         if not np.array_equal(np.sort(all_keys), np.sort(_edge_keys(bnd, self.n_nodes))):

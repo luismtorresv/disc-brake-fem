@@ -468,7 +468,12 @@ hay que recalcularlos, no ajustarlos.
   puntos) vectorizados, propiedades por región. T2 pasa a 1e-12; T6 da 0,86 / 0,31 / 0,10 /
   0,030 % para nx = 10/20/40/80 (igual al prototipo). T6 usa un bucle CN propio hasta que exista
   `timestepping.py`. 74 passed. Reporte: `reportes/F2_T1_ensamblaje-fem.md`.
-- [ ] Fase 3 — Integración temporal y validación
+- [x] Fase 3 — Integración temporal y validación (2026-11-05). `timestepping.py`: esquema θ
+  con LU por (θ, Δt), Rannacher, `time_grid` con t_f exacto, balance por componentes. T4
+  (cierre ≤ 2,8e-14), T5 (8,9e-14) y T7 pasan; T6 migrada a `integrate`. θ por defecto: 1/2 +
+  2 pasos Rannacher (tabla T7 con Δt = t_f/100: 1,5 % frente a 3,5 % con θ = 1 y 6 % con CN).
+  Ojo: θ = 1 con Δt = t_f/100 mete un 1 % menos de energía (regla del extremo derecho).
+  101 passed. Reporte: `reportes/F3_T1_integracion-temporal.md`.
 - [ ] Fase 4 — Cargas y materiales
 - [ ] Fase 5 — Configuración, CLI y salidas
 - [ ] Fase 6 — Convergencia y estudios paramétricos

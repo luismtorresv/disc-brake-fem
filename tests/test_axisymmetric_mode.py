@@ -5,19 +5,19 @@ borde. Condición inicial T0 = 1 + 0,5 J0(λ r/R), con λ el primer cero de J1 (
 que ∂T/∂r = 0 en r = R. Solución exacta: T = 1 + 0,5 J0(λ r/R) exp(−α λ² t / R²), α = k/(ρ c_p).
 
 Es la prueba que valida M y K CON PESO r: en modo plano el modo propio sería un coseno, no J0.
-El avance en el tiempo (Crank–Nicolson, θ = 1/2, Δt = 0,02 s, hasta t = 10 s) se escribe aquí
-directamente; el módulo `timestepping` llega en la Fase 3.
+El avance en el tiempo es Crank–Nicolson puro (θ = 1/2, sin Rannacher), Δt = 0,02 s, hasta
+t = 10 s, con `discfem.timestepping.integrate`.
 """
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
-import scipy.sparse.linalg as spla
 from scipy.special import j0, jn_zeros
 
 from discfem.fem import assemble_stiffness_mass
 from discfem.mesh.structured import tensor_mesh
+from discfem.timestepping import integrate, time_grid
 
 R, E = 0.05, 0.01
 K_, RHO, CP = 50.0, 7200.0, 460.0
@@ -33,20 +33,14 @@ def run_mode(nx: int) -> tuple[float, float]:
     K, M = assemble_stiffness_mass(mesh, K_, RHO * CP, axisymmetric=True)
     r = mesh.nodes[:, 0]
     shape = 0.5 * j0(LAM * r / R)
-    T = 1.0 + shape
-    lhs = spla.splu((M + THETA * DT * K).tocsc())
-    rhs_mat = (M - (1 - THETA) * DT * K).tocsr()
-    n_steps = round(T_END / DT)
-    err_all = 0.0
-    energy0 = M @ T
-    for n in range(1, n_steps + 1):
-        T = lhs.solve(rhs_mat @ T)
-        exact = 1.0 + shape * np.exp(-ALPHA * LAM**2 * (n * DT) / R**2)
-        err_all = max(err_all, np.abs(T - exact).max())
-    # Aislado: la energía Σ (M T)_i se conserva (1ᵀK = 0).
-    assert abs((M @ T).sum() - energy0.sum()) / energy0.sum() < 1e-12
-    err_end = np.abs(T - exact).max()
-    return err_end / 0.5, err_all / 0.5
+    t = time_grid(T_END, t_f=None, dt=DT)
+    res = integrate(M, K, None, 1.0 + shape, t, theta=THETA, rannacher_steps=0)
+    assert res.n_factorizations == 1
+    exact = 1.0 + shape[None, :] * np.exp(-ALPHA * LAM**2 * t[:, None] / R**2)
+    err = np.abs(res.saved_T - exact).max(axis=1)
+    # Aislado: la energía 1ᵀM T se conserva (1ᵀK = 0).
+    assert np.abs(res.energy_stored).max() < 1e-12 * np.abs(M @ (1.0 + shape)).sum()
+    return err[-1] / 0.5, err[1:].max() / 0.5
 
 
 @pytest.fixture(scope="module")

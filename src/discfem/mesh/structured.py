@@ -69,8 +69,9 @@ def tensor_mesh(r: np.ndarray, z: np.ndarray, ia: int, ib: int) -> Mesh:
     Args:
         r: coordenadas radiales estrictamente crecientes (r[0] = r_i, r[-1] = r_o).
         z: coordenadas axiales estrictamente crecientes (z[0] = 0, z[-1] = e).
-        ia, ib: índices en ``r`` de r_a y r_b (0 < ia < ib < len(r) − 1); las aristas
-            superiores entre ellos forman ``brake``.
+        ia, ib: índices en ``r`` de r_a y r_b (0 ≤ ia < ib ≤ len(r) − 1); las aristas
+            superiores entre ellos forman ``brake``. Con ia = 0 queda ``top_inner`` vacío y con
+            ib = len(r) − 1 queda ``top_outer`` vacío (útil en T7).
 
     Cada celda (i, j) con nodos n00, n10, n01, n11 se parte en los triángulos (n00, n10, n11)
     y (n00, n11, n01), ambos antihorarios. El nodo (i, j) tiene índice j·n_r + i. Útil también
@@ -80,9 +81,9 @@ def tensor_mesh(r: np.ndarray, z: np.ndarray, ia: int, ib: int) -> Mesh:
     z = np.asarray(z, dtype=float)
     if np.any(np.diff(r) <= 0) or np.any(np.diff(z) <= 0):
         raise ValueError("Las coordenadas r y z de la rejilla deben ser estrictamente crecientes.")
-    if not (0 < ia < ib < r.size - 1):
+    if not (0 <= ia < ib <= r.size - 1):
         raise ValueError(
-            f"Se requiere 0 < ia < ib < len(r) − 1; se recibió ia={ia}, ib={ib}, len(r)={r.size}."
+            f"Se requiere 0 ≤ ia < ib ≤ len(r) − 1; se recibió ia={ia}, ib={ib}, len(r)={r.size}."
         )
     nr, nz = r.size, z.size
     R, Z = np.meshgrid(r, z)
@@ -111,7 +112,7 @@ def tensor_mesh(r: np.ndarray, z: np.ndarray, ia: int, ib: int) -> Mesh:
         "top_inner": top_e[:ia],
         "r_inner": inner_e,
     }
-    edges = {k: v.astype(np.int64) for k, v in edges.items()}
+    edges = {k: np.reshape(v, (-1, 2)).astype(np.int64) for k, v in edges.items()}
 
     mesh = Mesh(
         nodes=nodes,
