@@ -502,10 +502,13 @@ hay que recalcularlos, no ajustarlos.
   Acero AISI 410 (ficha Chilexpo; verified: false por error de unidad en c_p y densidad
   dudosa) y pastilla sinterizada de cobre híbrida (k = 45,1 y ρ = 5520 medidos por Zhou et al.
   2024, Fig. 6, S800; c = 418 de Goo y Na 2014; verified: false; ambas de trenes). Preset
-  `motorcycle` = 410 + esa pastilla (γ = 0,483). Goo y Na ya no está en el preset. 236 passed.
+  `motorcycle` = 410 + esa pastilla (γ = 0,483). Goo y Na ya no está en el preset.
+  Barrido de pastilla (`configs/estudio_pastilla.yaml`, figura `gamma_map.pdf`): T − T0 es
+  exactamente proporcional a γ (dispersión ~1e-14); con el 410 el pico va de 80,9 a 119,4 °C
+  según la pastilla. 240 passed.
   PENDIENTE: contrastar 410 y pastilla con fuentes medidas; barrido de sensibilidad de la
   pastilla; datos de geometría/vehículo de moto para un `ejemplo_moto.yaml`.
   Reportes: `reportes/F7_T1_perfil-regiones-materiales.md`, `reportes/F7_T2_catalogo-materiales-limpert.md`,
   `reportes/F7_T3_acero-410-preset-moto.md`, `reportes/F7_T4_pastilla-sinterizada-preset-moto.md`,
-  `reportes/F7_T5_pastilla-cobre-zhou2024.md`.
+  `reportes/F7_T5_pastilla-cobre-zhou2024.md`, `reportes/F7_T6_barrido-pastilla.md`.
 - [ ] Fase 8 — Documentación

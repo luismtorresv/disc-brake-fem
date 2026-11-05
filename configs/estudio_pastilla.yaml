@@ -1,0 +1,60 @@
+# Barrido de pastilla para el informe (Fase 7): cuánto cambia la temperatura del disco según la
+# pastilla. La pastilla solo entra al modelo a través de γ = e_disco / (e_disco + e_pastilla)
+# (efusividades e = √(k ρ c)), así que se barren:
+#   1) las tres pastillas del catálogo, con disco de hierro fundido y con disco AISI 410;
+#   2) γ de forma continua (0,40 a 0,90) con cada disco, para ubicar las pastillas reales.
+# Geometría, vehículo, malla (rf = 2) y esquema temporal (θ = 1/2 + 2 Rannacher) son los de
+# ejemplo_auto.yaml: es una comparación de MATERIALES, no un caso de motocicleta.
+#
+# Ejecutar:  python -m discfem study configs/estudio_pastilla.yaml
+study:
+  name: estudio_pastilla
+  base: configs/ejemplo_auto.yaml
+  base_overrides:
+    output.formats: []           # en los barridos solo interesan las tablas y figuras del estudio
+  output_dir: results/estudio_pastilla
+
+  sweeps:
+    - name: pastillas_hierro
+      key: materials.pad
+      label: "pastilla"
+      title: "Disco de hierro fundido (Limpert): efecto de la pastilla"
+      overrides: {materials.regions.disc: gray_cast_iron_limpert}
+      values: [pad_limpert, sintered_pad_goo2014, sintered_pad_cu_zhou2024]
+
+    - name: pastillas_410
+      key: materials.pad
+      label: "pastilla"
+      title: "Disco de acero inoxidable AISI 410: efecto de la pastilla"
+      overrides: {materials.regions.disc: stainless_steel_410}
+      values: [pad_limpert, sintered_pad_goo2014, sintered_pad_cu_zhou2024]
+
+    - name: gamma_hierro
+      key: load.gamma
+      label: "γ"
+      title: "Disco de hierro fundido: barrido continuo de γ"
+      overrides: {materials.regions.disc: gray_cast_iron_limpert}
+      values: [0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+
+    - name: gamma_410
+      key: load.gamma
+      label: "γ"
+      title: "Disco AISI 410: barrido continuo de γ"
+      overrides: {materials.regions.disc: stainless_steel_410}
+      values: [0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+
+  # Figura resumen: curvas T(γ) de cada disco con las pastillas reales ubicadas en su γ.
+  gamma_map:
+    title: "Temperatura del disco frente a γ (geometría y vehículo del caso auto, 100 km/h)"
+    pairs:
+      - curve: gamma_hierro
+        points: pastillas_hierro
+        label: "Disco hierro fundido (Limpert)"
+        point_labels: &nombres
+          pad_limpert: "orgánica (Limpert)"
+          sintered_pad_goo2014: "sinterizada (Goo y Na)"
+          sintered_pad_cu_zhou2024: "sinterizada Cu (Zhou)"
+      - curve: gamma_410
+        points: pastillas_410
+        label: "Disco AISI 410"
+        point_labels: *nombres

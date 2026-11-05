@@ -34,6 +34,7 @@ from .materials import resolve_library_path
 from .solver import run
 
 _STUDY_KEYS = {"name", "base", "base_overrides", "output_dir", "mesh", "timestep", "sweeps",
+               "gamma_map",
                "use_selected_mesh"}
 
 
@@ -267,13 +268,49 @@ def plot_sweep(levels: list[Level], rows: list[dict], stem: Path, label: str, ti
     plt.close(fig)
 
 
+def plot_gamma_map(sweeps: dict, pairs: list[dict], stem: Path, title: str) -> None:
+    """T_max y T(t_end) frente a γ. Para cada par: una curva (barrido continuo de ``load.gamma``)
+    y, encima, los puntos de un barrido de materiales (cada uno en su γ calculado), con el
+    nombre del material. Así se ve cuánto mueve la temperatura la elección de la pastilla."""
+    plt = _plt()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    for i, pr in enumerate(pairs):
+        c = colors[i % len(colors)]
+        curve = sorted(sweeps[pr["curve"]]["rows"], key=lambda r: r["gamma"])
+        pts = sweeps[pr["points"]]["rows"]
+        for ax, key in zip(axes, ("T_max", "T_final_max"), strict=True):
+            ax.plot([r["gamma"] for r in curve], [r[key] for r in curve], "-", color=c,
+                    lw=1.6, label=pr.get("label", pr["curve"]))
+            ax.plot([r["gamma"] for r in pts], [r[key] for r in pts], "o", color=c, ms=7,
+                    mec="k")
+            names = pr.get("point_labels") or {}
+            for r in pts:
+                # Etiquetas del primer par abajo a la derecha y del segundo arriba a la
+                # izquierda, para que no se encimen cuando dos puntos tienen γ parecido.
+                right = i % 2 == 0
+                ax.annotate(names.get(str(r["value"]), str(r["value"])), (r["gamma"], r[key]),
+                            textcoords="offset points", xytext=(7, -12) if right else (-7, 7),
+                            ha="left" if right else "right", fontsize=7.5, color=c)
+    axes[0].set_ylabel("T máx (pico)")
+    axes[1].set_ylabel("T máx al final de la simulación")
+    for ax in axes:
+        ax.set_xlabel("γ (fracción del calor de fricción que entra al disco)")
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8)
+    fig.suptitle(title)
+    fig.tight_layout()
+    _save(fig, stem)
+    plt.close(fig)
+
+
 # ------------------------------------------------------------------------------ orquestación
 
 MESH_COLS = ["label", "n_nodes", "n_elements", "T_max", "t_of_T_max", "eps_percent",
              "eps_rise_percent", "eps_probes_max_percent", "order_p", "compute_time_s"]
 DT_COLS = ["label", "dt", "n_steps", "T_max", "t_of_T_max", "T_final_max", "eps_percent",
            "order_p", "compute_time_s"]
-SWEEP_COLS = ["value", "T_max", "t_of_T_max", "T_final_max", "t_f", "brake_in_J",
+SWEEP_COLS = ["value", "gamma", "T_max", "t_of_T_max", "T_final_max", "t_f", "brake_in_J",
               "compute_time_s"]
 
 
@@ -305,9 +342,28 @@ def load_study(path: str | Path) -> dict:
         fs = st["timestep"].get("factors")
         if not fs or any(int(f) != f or f < 1 for f in fs) or list(fs) != sorted(fs):
             raise ValueError("study.timestep.factors debe ser una lista creciente de enteros ≥ 1.")
+    names = []
     for sw in st.get("sweeps", []) or []:
         if not {"name", "key", "values"} <= set(sw):
             raise ValueError("Cada barrido necesita 'name', 'key' y 'values'.")
+        unknown = set(sw) - {"name", "key", "values", "label", "title", "overrides"}
+        if unknown:
+            raise ValueError(f"Claves desconocidas en el barrido '{sw['name']}': {sorted(unknown)}.")
+        if not isinstance(sw.get("overrides") or {}, dict):
+            raise ValueError(f"'overrides' del barrido '{sw['name']}' debe ser un diccionario.")
+        names.append(sw["name"])
+    gm = st.get("gamma_map")
+    if gm is not None:
+        pairs = gm.get("pairs") if isinstance(gm, dict) else None
+        if not pairs:
+            raise ValueError("study.gamma_map necesita 'pairs': [{curve, points, label}, ...].")
+        for pr in pairs:
+            if not isinstance(pr.get("point_labels") or {}, dict):
+                raise ValueError("gamma_map: 'point_labels' debe ser un diccionario {valor: texto}.")
+            for role in ("curve", "points"):
+                if pr.get(role) not in names:
+                    raise ValueError(f"gamma_map: '{pr.get(role)}' ({role}) no es un barrido "
+                                     f"definido; barridos: {names}.")
     return st
 
 
@@ -363,12 +419,20 @@ def run_study(path: str | Path, log=print) -> dict:
     summary["sweeps"] = {}
     for sw in st.get("sweeps", []) or []:
         log(f"Barrido '{sw['name']}': {sw['key']} = {sw['values']}")
-        levels, rows = parameter_sweep(base, sw["key"], list(sw["values"]), ov)
+        levels, rows = parameter_sweep(base, sw["key"], list(sw["values"]),
+                                       {**ov, **(sw.get("overrides") or {})})
         stem = out / f"sweep_{sw['name']}"
         write_table(rows, stem, SWEEP_COLS)
         plot_sweep(levels, rows, stem, sw.get("label", sw["key"]), sw.get("title", sw["name"]))
-        summary["sweeps"][sw["name"]] = {"key": sw["key"], "rows": rows}
+        summary["sweeps"][sw["name"]] = {"key": sw["key"], "rows": rows,
+                                         "overrides": sw.get("overrides") or {}}
         log(stem.with_suffix(".md").read_text(encoding="utf-8"))
+
+    if st.get("gamma_map"):
+        gm = st["gamma_map"]
+        plot_gamma_map(summary["sweeps"], gm["pairs"], out / "gamma_map",
+                       gm.get("title", "Temperatura frente a γ"))
+        log(f"Figura γ: {out / 'gamma_map.pdf'}")
 
     summary["effective_overrides"] = ov
     (out / "study_summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False),

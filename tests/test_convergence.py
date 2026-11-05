@@ -179,3 +179,54 @@ def test_cli_study_with_set(tmp_path):
     assert (tmp_path / "out" / "mesh_study.csv").is_file()
     assert not (tmp_path / "out" / "sweep_a.csv").exists()
     assert list(tmp_path.glob("tmp*.yaml")) == []  # el YAML temporal se borró
+
+
+# ------------------------------------------------------------------------------ barrido de pastilla
+
+def test_pad_sweep_overrides_gamma_map_and_linearity(tmp_path):
+    """Overrides por barrido + figura γ. Con T0 = T∞ el problema es lineal y la pastilla solo
+    entra por γ ⇒ (T − T0)/γ es el mismo para todas las pastillas y todos los γ (por disco)."""
+    pads = ["pad_limpert", "sintered_pad_goo2014", "sintered_pad_cu_zhou2024"]
+    st = {
+        "name": "pastilla", "base": str(ROOT / "configs" / "ejemplo_auto.yaml"),
+        "base_overrides": {**FAST, "output.formats": []},
+        "output_dir": str(tmp_path / "out"),
+        "sweeps": [
+            {"name": "p410", "key": "materials.pad", "values": pads,
+             "overrides": {"materials.regions.disc": "stainless_steel_410"}},
+            {"name": "g410", "key": "load.gamma", "values": [0.4, 0.9],
+             "overrides": {"materials.regions.disc": "stainless_steel_410"}},
+            {"name": "pfe", "key": "materials.pad", "values": pads[:2],
+             "overrides": {"materials.regions.disc": "gray_cast_iron_limpert"}},
+        ],
+        "gamma_map": {"pairs": [{"curve": "g410", "points": "p410",
+                                 "point_labels": {"pad_limpert": "orgánica"}}]},
+    }
+    path = tmp_path / "s.yaml"
+    path.write_text(yaml.safe_dump({"study": st}, allow_unicode=True), encoding="utf-8")
+    summary = run_study(path, log=lambda *a: None)
+    out = tmp_path / "out"
+    assert (out / "gamma_map.pdf").read_bytes()[:4] == b"%PDF"
+    sw = summary["sweeps"]
+    g410 = [r["gamma"] for r in sw["p410"]["rows"]]
+    gfe = [r["gamma"] for r in sw["pfe"]["rows"]]
+    assert g410[0] > g410[1] > g410[2]          # pastillas más conductoras ⇒ menor γ
+    assert gfe[0] != g410[0]                     # el override de disco sí se aplicó
+    rows = sw["p410"]["rows"] + sw["g410"]["rows"]
+    for key in ("T_max", "T_final_max"):
+        ratio = [(r[key] - 25.0) / r["gamma"] for r in rows]
+        assert max(ratio) - min(ratio) < 1e-10 * max(ratio), key
+
+
+@pytest.mark.parametrize(
+    ("change", "match"),
+    [
+        ({"gamma_map": {"pairs": [{"curve": "nada", "points": "a"}]}}, "no es un barrido"),
+        ({"gamma_map": {}}, "pairs"),
+        ({"sweeps": [{"name": "a", "key": "load.vehicle.decel", "values": [4.0],
+                      "colores": 1}]}, "desconocidas"),
+    ],
+)
+def test_load_study_errors_gamma_map(tmp_path, change, match):
+    with pytest.raises(ValueError, match=match):
+        load_study(_study_file(tmp_path, **change))
