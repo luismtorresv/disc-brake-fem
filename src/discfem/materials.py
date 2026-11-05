@@ -134,8 +134,13 @@ def _material_from_entry(name: str, entry: dict) -> Material:
     )
 
 
-def load_library(path: str | Path) -> dict[str, Material]:
-    """Lee y valida la librería de materiales (YAML ``{nombre: {k, rho, cp, source, verified}}``)."""
+def _read_library_file(path: str | Path) -> tuple[dict, dict]:
+    """(materiales crudos, presets crudos) de la librería.
+
+    Formatos admitidos:
+    - plano (fases 4–6): ``{nombre: {k, rho, cp, source, verified}}``;
+    - con secciones (Fase 7): ``{materials: {...}, presets: {tipo: {disc, pad, description}}}``.
+    """
     path = Path(path)
     if not path.is_file():
         raise ValueError(f"No existe la librería de materiales '{path}'.")
@@ -143,7 +148,57 @@ def load_library(path: str | Path) -> dict[str, Material]:
         data = yaml.safe_load(fh)
     if not isinstance(data, dict) or not data:
         raise ValueError(f"La librería '{path}' debe ser un diccionario no vacío de materiales.")
-    return {name: _material_from_entry(name, entry) for name, entry in data.items()}
+    if "materials" in data and isinstance(data["materials"], dict):
+        unknown = set(data) - {"materials", "presets"}
+        if unknown:
+            raise ValueError(f"Claves desconocidas en la librería '{path}': {sorted(unknown)}.")
+        presets = data.get("presets") or {}
+        if not isinstance(presets, dict):
+            raise ValueError(f"'presets' en '{path}' debe ser un diccionario.")
+        return data["materials"], presets
+    return data, {}
+
+
+def load_library(path: str | Path) -> dict[str, Material]:
+    """Lee y valida los materiales de la librería (ver :func:`_read_library_file`)."""
+    raw, _ = _read_library_file(path)
+    if not raw:
+        raise ValueError(f"La librería '{path}' no tiene materiales.")
+    return {name: _material_from_entry(name, entry) for name, entry in raw.items()}
+
+
+def load_presets(path: str | Path, library: dict[str, Material]) -> dict[str, dict]:
+    """Presets por tipo de vehículo: ``{tipo: {"disc": material, "pad": material, ...}}``.
+
+    Cada preset debe nombrar materiales que existan en la librería.
+    """
+    _, raw = _read_library_file(path)
+    out = {}
+    for name, p in raw.items():
+        if not isinstance(p, dict) or "disc" not in p:
+            raise ValueError(f"El preset '{name}' debe tener al menos 'disc' (y normalmente 'pad').")
+        unknown = set(p) - {"disc", "pad", "description"}
+        if unknown:
+            raise ValueError(f"Claves desconocidas en el preset '{name}': {sorted(unknown)}.")
+        for role in ("disc", "pad"):
+            if role in p and p[role] not in library:
+                raise ValueError(f"El preset '{name}' usa '{p[role]}' como {role}, que no está en "
+                                 "la librería.")
+        out[name] = dict(p)
+    return out
+
+
+def add_custom_materials(library: dict[str, Material], custom: dict | None) -> dict[str, Material]:
+    """Librería + materiales definidos por el usuario en ``materials.custom`` del YAML de la
+    corrida. Se validan igual que los de la librería (``source`` y ``verified`` obligatorios)
+    y no pueden repetir un nombre de la librería."""
+    out = dict(library)
+    for name, entry in (custom or {}).items():
+        if name in library:
+            raise ValueError(f"materials.custom define '{name}', que ya existe en la librería; "
+                             "use otro nombre o un override.")
+        out[name] = _material_from_entry(name, entry)
+    return out
 
 
 def resolve_library_path(library: str | Path, config_dir: str | Path | None = None) -> Path:

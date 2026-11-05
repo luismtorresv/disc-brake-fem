@@ -24,8 +24,10 @@ from .fem import assemble_robin, assemble_stiffness_mass
 from .loads import BrakingLoad, Load, brake_load_vector, make_load
 from .materials import (
     Material,
+    add_custom_materials,
     check_range,
     load_library,
+    load_presets,
     resolve_gamma,
     resolve_library_path,
     resolve_region_materials,
@@ -85,17 +87,27 @@ def run(
 
     # --- materiales (advertencia al inicio de cada corrida) ---------------------------
     lib_path = resolve_library_path(cfg.materials.library, cfg.config_dir)
-    library = load_library(lib_path)
-    materials = resolve_region_materials(cfg.materials.regions, library, cfg.materials.overrides)
+    library = add_custom_materials(load_library(lib_path), cfg.materials.custom)
+    regions = dict(cfg.materials.regions)
+    pad_name = cfg.materials.pad
+    if cfg.materials.preset is not None:
+        presets = load_presets(lib_path, library)
+        if cfg.materials.preset not in presets:
+            raise ValueError(f"materials.preset = '{cfg.materials.preset}' no existe; presets "
+                             f"disponibles en la librería: {sorted(presets)}.")
+        pr = presets[cfg.materials.preset]
+        regions.setdefault("disc", pr["disc"])  # lo explícito en la config tiene prioridad
+        pad_name = pad_name or pr.get("pad")
+    materials = resolve_region_materials(regions, library, cfg.materials.overrides)
     pad = None
-    if cfg.materials.pad is not None:
-        if cfg.materials.pad not in library:
-            raise ValueError(f"materials.pad = '{cfg.materials.pad}' no está en la librería.")
-        pad = library[cfg.materials.pad]
+    if pad_name is not None:
+        if pad_name not in library:
+            raise ValueError(f"materials.pad = '{pad_name}' no está en la librería.")
+        pad = library[pad_name]
     used = [*materials.values(), *([pad] if pad else [])]
     warn_unverified(used)
-    if cfg.groups_with("convection"):
-        check_range("h", cfg.h, "convection.h")
+    for g, (h_g, _) in cfg.convection.items():
+        check_range("h", h_g, f"convección en '{g}'")
 
     # --- malla, γ y carga ----------------------------------------------------------------
     mesh = build_mesh(cfg.geometry, cfg.mesh)
@@ -111,11 +123,7 @@ def run(
     k = {r: m.k for r, m in materials.items()}
     rho_c = {r: m.rho_cp for r, m in materials.items()}
     K, M = assemble_stiffness_mass(mesh, k, rho_c, axi)
-    conv_groups = cfg.groups_with("convection")
-    H, F_conv = None, None
-    if conv_groups:
-        H = assemble_robin(mesh, dict.fromkeys(conv_groups, cfg.h), axi)
-        F_conv = H @ np.full(mesh.n_nodes, cfg.T_inf)
+    H, F_conv = assemble_convection(mesh, cfg.convection, axi)
     F_brake = brake_load_vector(mesh, load, axi, flux_groups) if load is not None else None
 
     # --- tiempo ----------------------------------------------------------------------------
@@ -143,6 +151,27 @@ def run(
     if write:
         result.output_dir = write_outputs(result, lib_path)
     return result
+
+
+def assemble_convection(mesh: Mesh, convection: dict[str, tuple[float, float]], axi: bool):
+    """H = Σ_g H_g(h_g) y F_conv = Σ_g H_g·(T∞_g 1), con (h_g, T∞_g) por grupo.
+
+    Si todos los grupos comparten h y T∞ se ensambla en una sola llamada, exactamente como en
+    las fases 1–6 (mismo orden de sumas en punto flotante ⇒ resultados idénticos bit a bit).
+    """
+    if not convection:
+        return None, None
+    pairs = set(convection.values())
+    if len(pairs) == 1:
+        h, T_inf = pairs.pop()
+        H = assemble_robin(mesh, dict.fromkeys(convection, h), axi)
+        return H, H @ np.full(mesh.n_nodes, T_inf)
+    H, F = None, np.zeros(mesh.n_nodes)
+    for g, (h, T_inf) in convection.items():
+        Hg = assemble_robin(mesh, {g: h}, axi)
+        H = Hg if H is None else H + Hg
+        F += Hg @ np.full(mesh.n_nodes, T_inf)
+    return H, F
 
 
 def _with_dir(cfg: Config, config_dir: Path) -> Config:
@@ -220,6 +249,14 @@ def make_summary(res: Result, used: list[Material], elapsed: float) -> dict:
             for j, (r, z) in enumerate(cfg.output.probes)
         ],
         "compute_time_s": elapsed,
+        "geometry": {
+            "type": cfg.geometry.type,
+            "r_a": cfg.geometry.r_a,
+            "r_b": cfg.geometry.r_b,
+            "regions": mesh.region_names,
+            "area_r_moment": cfg.geometry.r_moment(),
+        },
+        "convection": {g: {"h": h, "T_inf": T} for g, (h, T) in cfg.convection.items()},
     }
     if isinstance(res.load, BrakingLoad):
         summary["load"].update({

@@ -57,7 +57,15 @@ def _z_grid(geo: RectangleGeometry, opts: MeshOptions) -> np.ndarray:
 
 
 def structured_mesh(geo: RectangleGeometry, opts: MeshOptions) -> Mesh:
-    """Malla estructurada triangular de la sección rectangular, graduada según ``opts``."""
+    """Malla estructurada triangular de la sección rectangular, graduada según ``opts``.
+
+    Solo para ``geometry.type: rectangle`` sin ``regions``: una rejilla tensorial no puede
+    seguir un perfil poligonal ni interfaces arbitrarias entre materiales (use ``gmsh``)."""
+    if not isinstance(geo, RectangleGeometry) or geo.regions:
+        raise ValueError(
+            "mesh.backend = 'structured' solo admite la sección rectangular sin regiones; "
+            "para perfiles poligonales o varias regiones use mesh.backend = 'gmsh'."
+        )
     r, ia, ib = _r_grid(geo, opts)
     z = _z_grid(geo, opts)
     return tensor_mesh(r, z, ia, ib)

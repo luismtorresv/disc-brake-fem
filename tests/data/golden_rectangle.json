@@ -1,0 +1,217 @@
+{
+ "generated_from_commit": "c930b37",
+ "cases": {
+  "gmsh": {
+   "nodes_sha256": "e485dbf15e19c9fb7b423666ea6cb8015e02e66422c8a9f739b09a4dd2c981e6",
+   "tris_sha256": "3ecf5fe6f9ee30bd2b8cd41231731f1314ec0c60c4ddd52053724d9418dc59d8",
+   "edges_sha256": {
+    "symmetry": "8b62adf664c953da3ad2a2bc7008490872f9be2b01b5d42739e0698f6aea138e",
+    "r_outer": "85b8083955ce6d32c5421941f110959eb2a676a194e88a958a4fbf550e38f68c",
+    "top_outer": "519b7d966c37230990a9eeb9fb0bf69419d0f457ecd2191f341a180e7e1dcf7e",
+    "brake": "91a15e99fe88080a35e7b616d672f4e86a1ad4138b4a944c3dce75462229f44f",
+    "top_inner": "4ee9257ac89e067b6739f9704ae7d76dfa551690bc8a8fe905dcb5a6a475e0a8",
+    "r_inner": "19084cd8b93c2d948ea8126eb9fe23d941f6cf1be92e55f4a34705a41dabd9cb"
+   },
+   "T_final_sha256": "a05b04e5932709c5b8cd2701d110b0ac4d7022fabe46c8c17f2a0efa7ecf2dc0",
+   "summary": {
+    "case": "ejemplo_frenado_100kmh",
+    "discfem_version": "0.0.1",
+    "T_max": {
+     "value": 102.29679526256292,
+     "time": 3.38916,
+     "node": 134,
+     "r": 0.10908148366743016,
+     "z": 0.01
+    },
+    "T_final": {
+     "time": 60.0,
+     "max": 72.33367181449523,
+     "min": 69.17225183931293
+    },
+    "T0": 25.0,
+    "energy": {
+     "note": "Energías físicas en J (con 2π en modo axisimétrico)",
+     "balance_relative_residual": 4.8910243781807785e-14,
+     "brake_in_J": 87160.36530879237,
+     "convection_out_J": 2606.00706976606,
+     "stored_J": 84554.35823902205
+    },
+    "mesh": {
+     "backend": "gmsh",
+     "refine_factor": 1.0,
+     "n_nodes": 929,
+     "n_elements": 1618
+    },
+    "time": {
+     "theta": 1.0,
+     "rannacher_steps": 0,
+     "dt": 0.05556000000000694,
+     "n_steps": 1080,
+     "t_end": 60.0,
+     "t_f": 5.556,
+     "n_factorizations": 2
+    },
+    "load": {
+     "type": "braking",
+     "gamma": 0.8692006698254295,
+     "pressure_profile": "uniform_wear",
+     "power_per_face_t0_W": 36461.25,
+     "energy_per_face_J": 101289.35250000001,
+     "gamma_energy_per_face_J": 88040.77303918406,
+     "q_max_t0_W_m2": 764236.5459572948
+    },
+    "materials": {
+     "disc": {
+      "name": "gray_cast_iron",
+      "k": 50.0,
+      "rho": 7200.0,
+      "cp": 460.0,
+      "source": "PENDIENTE: citar fuente",
+      "verified": false
+     }
+    },
+    "pad": {
+     "name": "organic_pad",
+     "k": 1.5,
+     "rho": 2500.0,
+     "cp": 1000.0,
+     "source": "PENDIENTE: citar fuente",
+     "verified": false
+    },
+    "unverified_materials": [
+     "gray_cast_iron",
+     "organic_pad"
+    ],
+    "probes": [
+     {
+      "r": 0.11,
+      "z": 0.01,
+      "T_max": 102.29209178685126,
+      "time_of_max": 3.38916,
+      "T_final": 71.88747395408511
+     },
+     {
+      "r": 0.11,
+      "z": 0.005,
+      "T_max": 87.79149880497894,
+      "time_of_max": 5.77824,
+      "T_final": 71.88772840066363
+     },
+     {
+      "r": 0.11,
+      "z": 0.0,
+      "T_max": 86.88108596164909,
+      "time_of_max": 7.11168,
+      "T_final": 71.89151259626648
+     }
+    ]
+   }
+  },
+  "structured": {
+   "nodes_sha256": "a8624b606d8e53f5ffbdfd67b0afba77dd5deb55784a90f8b94bbbe85c08a221",
+   "tris_sha256": "22cf29947ab894697048b0fc2cf1dfe09e8f75e04cc32fa7d6afc6f9293e139a",
+   "edges_sha256": {
+    "symmetry": "ff6f3e2e9a4d84d269ecf65e6bd4c963ac9018970d6a748ee39ba3fcbc10ce86",
+    "r_outer": "4ebc45bf83ae700873afff28af6e2eb32d9b597c8cd3dfb8c142d5456f00a9bb",
+    "top_outer": "9e441741d2484b94adb415de0412ed9606046e1fbb034a18b85bc94ae8988352",
+    "brake": "12bf7a96422286a49b51540c00d1afc3cc933a7d7a77281a3571321f61e2dbd7",
+    "top_inner": "17e566cca410fe10f46e6a69793730de457fc6ca068bf38fac3b1e30123cdfcc",
+    "r_inner": "5af8a759beea5b75eccf72e79b0b86666bd42a7df84d7ecaed070a7391d2e74f"
+   },
+   "T_final_sha256": "312605522bbe68afa08d9f71b9b873c71bbded25d37c7cc534f606dc06a0d41b",
+   "summary": {
+    "case": "ejemplo_frenado_100kmh",
+    "discfem_version": "0.0.1",
+    "T_max": {
+     "value": 102.28988322460401,
+     "time": 3.38916,
+     "node": 2079,
+     "r": 0.1097,
+     "z": 0.01
+    },
+    "T_final": {
+     "time": 60.0,
+     "max": 72.33457892942121,
+     "min": 69.16857022848149
+    },
+    "T0": 25.0,
+    "energy": {
+     "note": "Energías físicas en J (con 2π en modo axisimétrico)",
+     "balance_relative_residual": 2.1937490039400652e-13,
+     "brake_in_J": 87160.36530879237,
+     "convection_out_J": 2605.21804124601,
+     "stored_J": 84555.14726752724
+    },
+    "mesh": {
+     "backend": "structured",
+     "refine_factor": 1.0,
+     "n_nodes": 2190,
+     "n_elements": 3924
+    },
+    "time": {
+     "theta": 1.0,
+     "rannacher_steps": 0,
+     "dt": 0.05556000000000694,
+     "n_steps": 1080,
+     "t_end": 60.0,
+     "t_f": 5.556,
+     "n_factorizations": 2
+    },
+    "load": {
+     "type": "braking",
+     "gamma": 0.8692006698254295,
+     "pressure_profile": "uniform_wear",
+     "power_per_face_t0_W": 36461.25,
+     "energy_per_face_J": 101289.35250000001,
+     "gamma_energy_per_face_J": 88040.77303918406,
+     "q_max_t0_W_m2": 764236.5459572948
+    },
+    "materials": {
+     "disc": {
+      "name": "gray_cast_iron",
+      "k": 50.0,
+      "rho": 7200.0,
+      "cp": 460.0,
+      "source": "PENDIENTE: citar fuente",
+      "verified": false
+     }
+    },
+    "pad": {
+     "name": "organic_pad",
+     "k": 1.5,
+     "rho": 2500.0,
+     "cp": 1000.0,
+     "source": "PENDIENTE: citar fuente",
+     "verified": false
+    },
+    "unverified_materials": [
+     "gray_cast_iron",
+     "organic_pad"
+    ],
+    "probes": [
+     {
+      "r": 0.11,
+      "z": 0.01,
+      "T_max": 102.28948613680939,
+      "time_of_max": 3.38916,
+      "T_final": 71.88955460152782
+     },
+     {
+      "r": 0.11,
+      "z": 0.005,
+      "T_max": 87.76053171073703,
+      "time_of_max": 5.77824,
+      "T_final": 71.8895538536056
+     },
+     {
+      "r": 0.11,
+      "z": 0.0,
+      "T_max": 86.82217314280435,
+      "time_of_max": 7.05612,
+      "T_final": 71.88954226309585
+     }
+    ]
+   }
+  }
+ }
+}

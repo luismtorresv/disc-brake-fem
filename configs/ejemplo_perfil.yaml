@@ -1,0 +1,79 @@
+# Ejemplo de sección poligonal (Fase 7): el disco de referencia con un cubo interior más grueso
+# (r de 0,070 a 0,075 m con semiespesor 16 mm). Mismo vehículo y materiales que el caso de
+# referencia, elegidos con el preset `car` de la librería.
+#
+#   z ↑      (0.07,0.016)┌──┐(0.075,0.016)
+#                        │  └──────────────────────────────┐ z = 0.01
+#                        │   top_inner │     brake      │top_outer
+#                        │             0.08            0.14│
+#                        └─────────────── symmetry ────────┘ z = 0
+#                       0.07                              0.15   → r
+case: ejemplo_perfil_cubo
+
+geometry:
+  type: profile
+  axisymmetric: true
+  # Vértices en sentido ANTIHORARIO; el lado k va del punto k al k+1 (el último cierra).
+  points:
+    - [0.070, 0.000]
+    - [0.150, 0.000]
+    - [0.150, 0.010]
+    - [0.140, 0.010]
+    - [0.080, 0.010]
+    - [0.075, 0.010]
+    - [0.075, 0.016]
+    - [0.070, 0.016]
+  # Un grupo de frontera por lado (mismos nombres que en el rectángulo).
+  segments: [symmetry, r_outer, top_outer, brake, top_inner, top_inner, top_inner, r_inner]
+
+mesh:
+  backend: gmsh              # el perfil requiere gmsh
+  refine_factor: 2.0         # nivel seleccionado por el estudio de malla (Fase 6)
+  size_track: 3.0e-4
+  size_far: 4.0e-3
+  grading_distance: 0.01
+
+materials:
+  library: configs/materiales.yaml
+  preset: car                # disco y pastilla desde la librería
+  overrides: {}
+
+boundaries:
+  brake: flux
+  top_inner: convection
+  top_outer: convection
+  r_inner: convection
+  r_outer: convection
+  symmetry: insulated
+
+convection:
+  h: 40.0
+  T_inf: 25.0
+  per_group:                 # opcional: h y/o T∞ distintos en algún grupo
+    r_outer: {h: 60.0}
+
+initial: {T0: 25.0}
+
+load:
+  type: braking
+  vehicle:
+    mass: 1500.0
+    v0: 27.78
+    decel: 5.0
+    wheel_radius: 0.30
+    brake_fraction: 0.7
+    discs_per_axle: 2
+    faces_per_disc: 2
+  pressure_profile: uniform_wear
+  gamma: auto
+
+time:
+  theta: 0.5
+  rannacher_steps: 2
+  dt: auto
+  t_end: 60.0
+
+output:
+  dir: results/ejemplo_perfil
+  probes: [[0.11, 0.01], [0.11, 0.0], [0.0725, 0.016]]
+  formats: [csv, vtk, png]

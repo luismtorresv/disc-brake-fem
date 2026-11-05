@@ -61,7 +61,11 @@ def plot_mesh(mesh: Mesh, path: str | Path, title: str = "", zoom_r: float | Non
         zoom_r = mesh.nodes[np.unique(mesh.edges["brake"]), 0].min()
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 6.5), gridspec_kw={"height_ratios": [1, 2]})
+    multi = len(mesh.region_names) > 1
     for ax in axes:
+        if multi:  # sombrea cada región de material
+            ax.tripcolor(r, z, mesh.tris, facecolors=mesh.region.astype(float), cmap="Pastel1",
+                         vmin=0, vmax=8, alpha=0.8)
         ax.triplot(r, z, mesh.tris, color="0.55", lw=0.3)
         for g in BOUNDARY_GROUPS:
             seg = mesh.nodes[mesh.edges[g]]
@@ -73,11 +77,20 @@ def plot_mesh(mesh: Mesh, path: str | Path, title: str = "", zoom_r: float | Non
     axes[0].set_title(
         f"{title}  —  {mesh.n_nodes} nodos, {mesh.n_elements} triángulos".strip(" —")
     )
-    axes[1].set_xlim(zoom_r - 1.5 * e, zoom_r + 1.5 * e)
-    axes[1].set_ylim(-0.05 * e, 1.05 * e)
+    zmin = z.min()
+    axes[1].set_xlim(zoom_r - 1.5 * (e - zmin), zoom_r + 1.5 * (e - zmin))
+    axes[1].set_ylim(zmin - 0.05 * (e - zmin), e + 0.05 * (e - zmin))
     axes[1].set_title(f"Ampliación alrededor de r = {zoom_r:g} m")
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=6, fontsize=9, frameon=False)
+    if multi:
+        from matplotlib.patches import Patch
+
+        cmap = plt.get_cmap("Pastel1")
+        handles += [Patch(color=cmap(j / 8), label=f"región {n}")
+                    for j, n in enumerate(mesh.region_names)]
+        labels += [f"región {n}" for n in mesh.region_names]
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(labels), 8), fontsize=9,
+               frameon=False)
     fig.tight_layout(rect=(0, 0.05, 1, 1))
     fig.savefig(path, dpi=160)
     plt.close(fig)
@@ -86,16 +99,19 @@ def plot_mesh(mesh: Mesh, path: str | Path, title: str = "", zoom_r: float | Non
 
 # ------------------------------------------------------------------------------ sondas
 
-def interpolation_matrix(mesh: Mesh, points) -> sp.csr_matrix:
+def interpolation_matrix(mesh: Mesh, points, allow_outside: bool = False):
     """Matriz P (n_puntos × N) tal que P @ T es la interpolación P1 de T en ``points``.
 
     Para cada punto se calculan sus coordenadas baricéntricas en TODOS los triángulos
     (vectorizado) y se usa el primero que lo contiene (todas ≥ −1e-10). Un punto fuera del
-    dominio produce ``ValueError``.
+    dominio produce ``ValueError``; con ``allow_outside=True`` su fila queda vacía y se
+    devuelve ``(P, dentro)`` con la máscara de puntos interiores.
     """
     pts = np.asarray(points, dtype=float).reshape(-1, 2)
+    inside_mask = np.ones(pts.shape[0], dtype=bool)
     if pts.shape[0] == 0:
-        return sp.csr_matrix((0, mesh.n_nodes))
+        P0 = sp.csr_matrix((0, mesh.n_nodes))
+        return (P0, inside_mask) if allow_outside else P0
     p = mesh.nodes[mesh.tris]
     v0, v1, v2 = p[:, 0], p[:, 1], p[:, 2]
     d1, d2 = v1 - v0, v2 - v0
@@ -108,13 +124,17 @@ def interpolation_matrix(mesh: Mesh, points) -> sp.csr_matrix:
         lam = np.stack([1.0 - l1 - l2, l1, l2], axis=1)
         inside = np.flatnonzero(np.all(lam >= -1e-10, axis=1))
         if inside.size == 0:
+            if allow_outside:
+                inside_mask[i] = False
+                continue
             raise ValueError(f"La sonda (r={r:g}, z={z:g}) está fuera del dominio.")
         e = inside[0]
         w = np.clip(lam[e], 0.0, None)
         rows += [i, i, i]
         cols += list(mesh.tris[e])
         vals += list(w / w.sum())
-    return sp.csr_matrix((vals, (rows, cols)), shape=(pts.shape[0], mesh.n_nodes))
+    P = sp.csr_matrix((vals, (rows, cols)), shape=(pts.shape[0], mesh.n_nodes))
+    return (P, inside_mask) if allow_outside else P
 
 
 def snapshot_indices(saved_times: np.ndarray, t_peak: float, t_f: float | None,
@@ -136,6 +156,10 @@ def plot_field_snapshots(mesh: Mesh, times, fields, path, T_ref: float | None = 
     r, z = mesh.nodes[:, 0], mesh.nodes[:, 1]
     tri_up = Triangulation(r, z, mesh.tris)
     tri_dn = Triangulation(r, -z, mesh.tris[:, [0, 2, 1]])
+    # Reflejar solo si el plano de simetría es z = 0 (rectángulo y perfiles con 'symmetry'
+    # sobre z = 0); si no, se dibuja solo la sección.
+    sym = np.unique(mesh.edges["symmetry"])
+    mirror = sym.size > 0 and np.all(mesh.nodes[sym, 1] == 0.0)
     vmin = min(f.min() for f in fields) if T_ref is None else min(T_ref, *(f.min() for f in fields))
     vmax = max(f.max() for f in fields)
     levels = np.linspace(vmin, vmax if vmax > vmin else vmin + 1e-9, 41)
@@ -144,8 +168,9 @@ def plot_field_snapshots(mesh: Mesh, times, fields, path, T_ref: float | None = 
     cs = None
     for ax, t, f in zip(axes[:, 0], times, fields, strict=True):
         cs = ax.tricontourf(tri_up, f, levels=levels, cmap="inferno")
-        ax.tricontourf(tri_dn, f, levels=levels, cmap="inferno")
-        ax.axhline(0.0, color="w", lw=0.5, ls=":")
+        if mirror:
+            ax.tricontourf(tri_dn, f, levels=levels, cmap="inferno")
+            ax.axhline(0.0, color="w", lw=0.5, ls=":")
         ax.set_aspect("equal")
         ax.set_ylabel("z [m]")
         ax.set_title(f"t = {t:.3f} s   (T máx = {f.max():.1f})", fontsize=10)
@@ -178,12 +203,12 @@ def plot_tmax(times, T_max, t_f, path, probes=(), probe_times=None, probe_T=None
 def plot_depth_profiles(mesh: Mesh, r_line: float, times, fields, path) -> Path:
     """Perfiles T(z) en r = ``r_line`` (el centro de la pista) en varios instantes."""
     plt = _plt()
-    e = mesh.nodes[:, 1].max()
-    zs = np.linspace(0.0, e, 101)
-    P = interpolation_matrix(mesh, np.column_stack([np.full_like(zs, r_line), zs]))
+    zs = np.linspace(mesh.nodes[:, 1].min(), mesh.nodes[:, 1].max(), 101)
+    P, inside = interpolation_matrix(mesh, np.column_stack([np.full_like(zs, r_line), zs]),
+                                     allow_outside=True)
     fig, ax = plt.subplots(figsize=(6, 4.5))
     for t, f in zip(times, fields, strict=True):
-        ax.plot(P @ f, zs * 1e3, label=f"t = {t:.2f} s")
+        ax.plot((P @ f)[inside], zs[inside] * 1e3, label=f"t = {t:.2f} s")
     ax.set_xlabel("T")
     ax.set_ylabel("z [mm]  (z = e: pista; z = 0: plano medio)")
     ax.set_title(f"Perfiles en profundidad, r = {r_line:g} m")

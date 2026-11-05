@@ -492,5 +492,12 @@ hay que recalcularlos, no ajustarlos.
   T(60 s) ≈ 72,81 °C, igual que CN + Rannacher. Barridos a, v0, m crecientes; k del disco solo
   como sensibilidad ±20 % (no hay materiales con fuente). 194 passed.
   Reporte: `reportes/F6_T1_convergencia-barridos.md`.
-- [ ] Fase 7 — Generalización (opcional)
+- [~] Fase 7 — Generalización (2026-11-05). Hecho: `geometry.type: profile` (polígono +
+  grupo por lado), `regions` por polígonos (Gmsh OCC + fragment, malla conforme), presets por
+  vehículo, `materials.custom`, `convection.per_group`. Criterios del PLAN cumplidos: el
+  rectángulo da resultados idénticos bit a bit (referencia `tests/data/golden_rectangle.json`)
+  y dos regiones con el mismo material = homogéneo a 1e-12. 229 passed.
+  PENDIENTE: catálogo de materiales reales (inox martensítico de moto, pastilla sinterizada,
+  hierro gris con fuente) y preset `motorcycle`, con la fuente de Limpert que entregará el
+  usuario. Reporte: `reportes/F7_T1_perfil-regiones-materiales.md`.
 - [ ] Fase 8 — Documentación

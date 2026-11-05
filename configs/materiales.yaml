@@ -1,20 +1,37 @@
-# Librería de materiales (PLAN.md §4). Cada entrada OBLIGA a `source` y `verified`.
-# Mientras `verified: false`, cada corrida imprime una advertencia con la lista.
-# Los valores siguientes son los SUPUESTOS DEL PROTOTIPO del PLAN: no tienen fuente todavía.
-# Para el informe hay que reemplazarlos por valores con referencia y poner verified: true.
+# Librería de materiales (PLAN.md §4; formato con secciones de la Fase 7).
+#
+# materials: cada entrada OBLIGA a `source` y `verified` (CLAUDE.md, regla 4). Mientras
+#   `verified: false`, cada corrida imprime una advertencia con la lista.
+# presets:   materiales de disco y pastilla por tipo de vehículo; en la config de una corrida
+#   basta `materials: {preset: car}`. Lo que se escriba explícitamente en `regions` o `pad`
+#   tiene prioridad sobre el preset.
+#
+# Los valores de gray_cast_iron y organic_pad son los SUPUESTOS DEL PROTOTIPO del PLAN: no
+# tienen fuente todavía. PENDIENTE: reemplazarlos y añadir el acero inoxidable martensítico
+# (discos de motocicleta) y la pastilla sinterizada con los datos de Limpert, "Brake Design and
+# Safety" (tabla y página en `source`), y crear el preset `motorcycle`.
 
-gray_cast_iron:
-  description: Hierro fundido gris (disco)
-  k: 50.0          # W/(m·K)   SUPUESTO DEL PROTOTIPO
-  rho: 7200.0      # kg/m³     SUPUESTO DEL PROTOTIPO
-  cp: 460.0        # J/(kg·K)  SUPUESTO DEL PROTOTIPO
-  source: "PENDIENTE: citar fuente"
-  verified: false
+materials:
+  gray_cast_iron:
+    description: Hierro fundido gris (disco)
+    k: 50.0          # W/(m·K)   SUPUESTO DEL PROTOTIPO
+    rho: 7200.0      # kg/m³     SUPUESTO DEL PROTOTIPO
+    cp: 460.0        # J/(kg·K)  SUPUESTO DEL PROTOTIPO
+    source: "PENDIENTE: citar fuente"
+    verified: false
 
-organic_pad:
-  description: Pastilla orgánica (solo efusividad para γ)
-  k: 1.5           # W/(m·K)   SUPUESTO DEL PROTOTIPO
-  rho: 2500.0      # kg/m³     SUPUESTO DEL PROTOTIPO
-  cp: 1000.0       # J/(kg·K)  SUPUESTO DEL PROTOTIPO
-  source: "PENDIENTE: citar fuente"
-  verified: false
+  organic_pad:
+    description: Pastilla orgánica (solo efusividad para γ)
+    k: 1.5           # W/(m·K)   SUPUESTO DEL PROTOTIPO
+    rho: 2500.0      # kg/m³     SUPUESTO DEL PROTOTIPO
+    cp: 1000.0       # J/(kg·K)  SUPUESTO DEL PROTOTIPO
+    source: "PENDIENTE: citar fuente"
+    verified: false
+
+presets:
+  car:
+    description: Automóvil de pasajeros, disco de hierro fundido gris y pastilla orgánica
+    disc: gray_cast_iron
+    pad: organic_pad
+  # motorcycle: PENDIENTE (disco de acero inoxidable martensítico + pastilla sinterizada),
+  # cuando existan esas entradas con fuente en `materials`.

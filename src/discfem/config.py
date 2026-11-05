@@ -15,7 +15,7 @@ from typing import Any
 
 import yaml
 
-from .geometry import BOUNDARY_GROUPS, RectangleGeometry
+from .geometry import BOUNDARY_GROUPS, DEFAULT_REGION, Geometry, geometry_from_dict
 from .mesh import MeshOptions
 from .timestepping import DEFAULT_RANNACHER_STEPS, DEFAULT_STEPS_PER_TF, DEFAULT_THETA
 
@@ -29,12 +29,24 @@ _FORMATS = ("csv", "vtk", "png")
 
 @dataclass(frozen=True)
 class MaterialsConfig:
-    """Sección ``materials``: librería, material por región, pastilla y overrides."""
+    """Sección ``materials``.
+
+    Atributos:
+        library: ruta de la librería (``materiales.yaml``).
+        regions: material de cada región ({región: material}); con ``preset`` puede omitirse
+            ``disc``.
+        pad: material de la pastilla (para γ); con ``preset`` puede omitirse.
+        preset: tipo de vehículo de la sección ``presets`` de la librería (p. ej. ``car``).
+        custom: materiales definidos en el propio YAML {nombre: {k, rho, cp, source, verified}}.
+        overrides: cambios de propiedades por región.
+    """
 
     library: str
     regions: dict[str, str]
     pad: str | None = None
     overrides: dict[str, dict] = field(default_factory=dict)
+    preset: str | None = None
+    custom: dict[str, dict] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -68,7 +80,7 @@ class Config:
     """
 
     case: str
-    geometry: RectangleGeometry
+    geometry: Geometry
     mesh: MeshOptions
     materials: MaterialsConfig
     boundaries: dict[str, str]
@@ -80,6 +92,7 @@ class Config:
     output: OutputConfig
     raw: dict
     config_dir: Path
+    convection: dict[str, tuple[float, float]] = field(default_factory=dict)
 
     def groups_with(self, bc_type: str) -> list[str]:
         """Grupos de frontera con la condición ``bc_type``, en el orden de BOUNDARY_GROUPS."""
@@ -139,26 +152,35 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
     _check_keys(raw, "raíz", _TOP_KEYS)
     case = str(raw.get("case", "caso"))
 
-    geometry = RectangleGeometry.from_dict(_section(raw, "geometry"))
+    geometry = geometry_from_dict(_section(raw, "geometry"))
     mesh = MeshOptions.from_dict(_section(raw, "mesh", required=False))
 
     mat = _section(raw, "materials")
-    _check_keys(mat, "materials", {"library", "regions", "pad", "overrides"})
-    if "library" not in mat or "regions" not in mat:
-        raise ValueError("'materials' necesita 'library' y 'regions'.")
-    regions = mat["regions"]
-    if not isinstance(regions, dict) or not regions:
+    _check_keys(mat, "materials", {"library", "regions", "pad", "overrides", "preset", "custom"})
+    if "library" not in mat:
+        raise ValueError("'materials' necesita 'library'.")
+    preset = mat.get("preset")
+    regions = mat.get("regions") or {}
+    if not isinstance(regions, dict):
         raise ValueError("'materials.regions' debe ser un diccionario {región: material}.")
-    if set(regions) != {"disc"}:
-        raise ValueError(
-            f"La geometría rectangular tiene una sola región, 'disc'; se recibió {sorted(regions)}."
-        )
+    expected = set(geometry.region_names)
+    extra = set(regions) - expected
+    if extra:
+        raise ValueError(f"materials.regions nombra regiones que la geometría no tiene: "
+                         f"{sorted(extra)}; regiones de la geometría: {sorted(expected)}.")
+    missing = expected - set(regions) - ({DEFAULT_REGION} if preset else set())
+    if missing:
+        raise ValueError(f"Falta el material de las regiones {sorted(missing)} en "
+                         "materials.regions (o un 'preset' que defina 'disc').")
     overrides = mat.get("overrides") or {}
-    if not isinstance(overrides, dict):
-        raise ValueError("'materials.overrides' debe ser un diccionario {región: {k: …}}.")
+    custom = mat.get("custom") or {}
+    for name, sec in (("overrides", overrides), ("custom", custom)):
+        if not isinstance(sec, dict):
+            raise ValueError(f"'materials.{name}' debe ser un diccionario.")
     materials = MaterialsConfig(
         library=str(mat["library"]), regions=dict(regions), pad=mat.get("pad"),
-        overrides=dict(overrides),
+        overrides=dict(overrides), preset=None if preset is None else str(preset),
+        custom=dict(custom),
     )
 
     bnd = _section(raw, "boundaries")
@@ -170,14 +192,29 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
         if bc not in _BC_TYPES:
             raise ValueError(f"boundaries.{g} = {bc!r}; debe ser uno de {_BC_TYPES}.")
 
-    has_conv = any(v == "convection" for v in bnd.values())
-    conv = _section(raw, "convection", required=has_conv)
-    _check_keys(conv, "convection", {"h", "T_inf"})
-    if has_conv:
+    conv_groups = [g for g in BOUNDARY_GROUPS if bnd[g] == "convection"]
+    conv = _section(raw, "convection", required=bool(conv_groups))
+    _check_keys(conv, "convection", {"h", "T_inf", "per_group"})
+    per_group = conv.get("per_group") or {}
+    if not isinstance(per_group, dict):
+        raise ValueError("'convection.per_group' debe ser un diccionario {grupo: {h, T_inf}}.")
+    bad = [g for g in per_group if g not in conv_groups]
+    if bad:
+        raise ValueError(f"convection.per_group nombra grupos sin condición 'convection': {bad}; "
+                         f"grupos con convección: {conv_groups}.")
+    if conv_groups:
         h = _number(conv, "convection", "h", positive=True)
         T_inf = _number(conv, "convection", "T_inf")
     else:
         h, T_inf = 0.0, 0.0
+    convection = {}
+    for g in conv_groups:
+        sec = per_group.get(g) or {}
+        _check_keys(sec, f"convection.per_group.{g}", {"h", "T_inf"})
+        convection[g] = (
+            _number(sec, f"convection.per_group.{g}", "h", default=h, positive=True),
+            _number(sec, f"convection.per_group.{g}", "T_inf", default=T_inf),
+        )
 
     init = _section(raw, "initial")
     _check_keys(init, "initial", {"T0"})
@@ -185,8 +222,8 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
 
     load = _section(raw, "load", required=any(v == "flux" for v in bnd.values()))
     if load and load.get("type") == "braking" and materials.pad is None \
-            and load.get("gamma", "auto") == "auto":
-        raise ValueError("gamma: auto necesita 'materials.pad' para calcular γ.")
+            and materials.preset is None and load.get("gamma", "auto") == "auto":
+        raise ValueError("gamma: auto necesita 'materials.pad' (o un 'preset') para calcular γ.")
 
     tm = _section(raw, "time")
     _check_keys(tm, "time", {"theta", "rannacher_steps", "dt", "t_end", "steps_per_tf"})
@@ -227,7 +264,7 @@ def build_config(raw: dict, config_dir: str | Path = ".") -> Config:
     return Config(
         case=case, geometry=geometry, mesh=mesh, materials=materials, boundaries=dict(bnd),
         h=h, T_inf=T_inf, T0=T0, load=dict(load), time=time, output=output,
-        raw=raw, config_dir=Path(config_dir),
+        raw=raw, config_dir=Path(config_dir), convection=convection,
     )
 
 

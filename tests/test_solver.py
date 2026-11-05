@@ -167,7 +167,7 @@ def ref_raw() -> dict:
         ("output.formats", ["pdf"], "formats"),
         ("output.probes", [[0.1]], "pares"),
         ("convection.h", -5.0, "> 0"),
-        ("materials.regions", {"disc": "x", "capa": "y"}, "una sola región"),
+        ("materials.regions", {"disc": "x", "capa": "y"}, "regiones que la geometría no tiene"),
         ("geometry.track.r_b", 0.2, "r_outer"),
         ("extra", 1, "raíz"),
     ],

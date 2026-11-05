@@ -17,7 +17,7 @@ import numpy as np
 import yaml
 
 from .config import set_dotted
-from .geometry import BOUNDARY_GROUPS, RectangleGeometry
+from .geometry import BOUNDARY_GROUPS, geometry_from_dict
 from .materials import PropertyRangeWarning, UnverifiedMaterialWarning
 from .mesh import MeshOptions, build_mesh
 
@@ -49,7 +49,7 @@ def cmd_mesh(config_path: Path, overrides: dict) -> int:
         raise ValueError(f"'{config_path}' no contiene un diccionario YAML.")
     for key, value in overrides.items():
         set_dotted(raw, key, value)
-    geo = RectangleGeometry.from_dict(raw.get("geometry") or {})
+    geo = geometry_from_dict(raw.get("geometry") or {})
     opts = MeshOptions.from_dict(raw.get("mesh") or {})
     case = raw.get("case", "caso")
     mesh = build_mesh(geo, opts)
@@ -66,8 +66,11 @@ def cmd_mesh(config_path: Path, overrides: dict) -> int:
     print(f"  nodos: {mesh.n_nodes}   triángulos: {mesh.n_elements}")
     print(f"  área mín/máx: {A.min():.3e} / {A.max():.3e} m²")
     print(f"  Σ A·r̄ = {np.sum(A * mesh.r_centroid()):.12e} m³ "
-          f"(exacto e(r_o²−r_i²)/2 = "
-          f"{geo.half_thickness * (geo.r_outer**2 - geo.r_inner**2) / 2:.12e})")
+          f"(exacto ∫ r dA del polígono = {geo.r_moment():.12e})")
+    if len(mesh.region_names) > 1:
+        for j, n in enumerate(mesh.region_names):
+            print(f"  región {n:10s}: {int((mesh.region == j).sum())} triángulos, "
+                  f"área {A[mesh.region == j].sum():.6e} m²")
     for g in BOUNDARY_GROUPS:
         print(f"  {g:10s}: {len(mesh.edges[g])} aristas")
     print(f"  figura: {plot_path}")
