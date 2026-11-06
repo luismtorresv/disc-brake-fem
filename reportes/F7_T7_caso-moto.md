@@ -4,7 +4,7 @@ Todas las pruebas pasaron (243 passed) sin relajar tolerancias. Sobre los datos 
 
 - **Con fuente:** los discos (2 × Ø 298 mm), la masa de la moto (≈ 184 kg, de fuentes
   secundarias) y el espesor (4,5 mm, de un disco de reemplazo Brembo).
-- **Supuestos que aprobaste:** ancho del anillo, piloto, φ, desaceleración y h.
+- **Supuestos que aprobaste:** ancho del anillo, piloto, $\varphi$, desaceleración y $h$.
 - **Materiales:** sin verificar (AISI 410 y pastilla sinterizada de cobre).
 
 ## 1. Qué se pidió
@@ -17,8 +17,9 @@ datos que separaba lo que tiene fuente de lo supuesto, y la aprobaste.
 
 - `configs/ejemplo_moto.yaml`: nuevo. El caso de moto; cada dato está marcado como FUENTE o
   SUPUESTO en los comentarios.
-- `configs/estudio_moto.yaml`: nuevo. Estudio de malla (rf 1, 2, 4), de Δt (Δt, Δt/2, Δt/4),
-  barrido del ancho del anillo (el supuesto con más incertidumbre) y barrido de pastilla.
+- `configs/estudio_moto.yaml`: nuevo. Estudio de malla (rf 1, 2, 4), de $\Delta t$
+  ($\Delta t$, $\Delta t/2$, $\Delta t/4$), barrido del ancho del anillo (el supuesto con más
+  incertidumbre) y barrido de pastilla.
 - `tests/test_moto.py`: nuevo. Geometría y materiales, energía y cota, y disco térmicamente
   delgado (3 pruebas).
 - `README.md`: los dos archivos nuevos en la tabla de configuraciones.
@@ -31,29 +32,41 @@ existentes.
 
 **Geometría.** Se modela solo el **anillo flotante** de acero:
 
-- r_o = 0,149 m, de los discos de Ø 298 mm (FUENTE);
-- anillo de 35 mm, así que r_i = 0,114 m (SUPUESTO);
-- semiespesor e = 2,25 mm, de los 4,5 mm de espesor (FUENTE);
-- pista de 30 mm centrada en el anillo, r_a = 0,1165 y r_b = 0,1465 m (SUPUESTO).
+- $r_o = 0{,}149$ m, de los discos de Ø 298 mm (FUENTE);
+- anillo de 35 mm, así que $r_i = 0{,}114$ m (SUPUESTO);
+- semiespesor $e = 2{,}25$ mm, de los 4,5 mm de espesor (FUENTE);
+- pista de 30 mm centrada en el anillo, $r_a = 0{,}1165$ y $r_b = 0{,}1465$ m (SUPUESTO).
 
 El porta-disco de aluminio se une al anillo por remaches. Su conducción se desprecia y el borde
 interior del anillo tiene convección.
 
 **Vehículo y carga.**
 
-- m = 184 (moto) + 80 (piloto) = 264 kg; v0 = 100 km/h; a = 0,8 g = 7,848 m/s², así que
-  t_f = 3,54 s;
-- φ = 0,8 en el eje delantero; 2 discos con 2 caras.
+- $m = 184\ (\text{moto}) + 80\ (\text{piloto}) = 264$ kg; $v_0 = 100$ km/h;
+  $a = 0{,}8\,g = 7{,}848\ \mathrm{m/s^2}$, así que $t_f = v_0/a = 3{,}54$ s;
+- $\varphi = 0{,}8$ en el eje delantero; $n_d = 2$ discos con $n_c = 2$ caras.
 
-La energía por cara es φ m v0²/(2 n_d n_c) = 20,4 kJ. Con el preset `motorcycle`
-(γ = 0,483), entran 9,85 kJ por cara.
+La energía por cara es
 
-**Disco térmicamente delgado.** La difusividad del 410 es α = k/(ρc) = 7,9e-6 m²/s. El tiempo de
-difusión a través del semiespesor, e²/α ≈ 0,64 s, es mucho menor que t_f = 3,54 s. Por eso el
-calor atraviesa el espesor durante el frenado y la temperatura es casi uniforme en z: en el pico,
-la superficie y el plano medio difieren en 0,5 °C. Es lo contrario del disco de auto (10 mm de
-semiespesor, e²/α ≈ 6 s > t_f), donde el gradiente en el espesor es grande. Por eso este caso es
-mucho menos exigente con la malla.
+$$
+E_{\text{cara}} = \frac{\varphi\, m\, v_0^2}{2\, n_d\, n_c} = 20{,}4\ \mathrm{kJ}.
+$$
+
+Con el preset `motorcycle` ($\gamma = 0{,}483$), entran 9,85 kJ por cara.
+
+**Disco térmicamente delgado.** La difusividad del 410 es
+$\alpha = k/(\rho c) = 7{,}9\times10^{-6}\ \mathrm{m^2/s}$. El tiempo de difusión a través del
+semiespesor,
+
+$$
+\tau = \frac{e^2}{\alpha} \approx 0{,}64\ \mathrm{s} \ll t_f = 3{,}54\ \mathrm{s},
+$$
+
+es mucho menor que el frenado. Por eso el calor atraviesa el espesor durante el frenado y la
+temperatura es casi uniforme en $z$: en el pico, la superficie y el plano medio difieren en
+0,5 °C. Es lo contrario del disco de auto (10 mm de semiespesor, $e^2/\alpha \approx 6$ s
+$> t_f$), donde el gradiente en el espesor es grande. Por eso este caso es mucho menos exigente
+con la malla.
 
 **Mallado.** Se escalaron los tamaños al disco delgado: size_far = 1 mm y grading_distance =
 3 mm, con rf = 2 (1641 nodos). El estudio de malla confirma que el resultado no depende de la
@@ -64,11 +77,11 @@ malla.
 - **La MT-07** porque su ficha oficial da el número y el diámetro de los discos, y existe un disco
   de reemplazo con espesor publicado. El resto de los supuestos lo aprobaste, y cada uno está
   marcado en el YAML.
-- **Sin radio de rueda.** Solo se usa para calcular ω y no afecta la temperatura; incluirlo
-  habría sido otro supuesto innecesario.
-- **h = 40 W/(m²·K) y T0 = 25 °C, como en el auto,** para que la comparación aísle geometría,
-  vehículo y materiales. En una moto, el disco expuesto probablemente tiene un h mayor; eso
-  bajaría la temperatura final, no el pico (§6).
+- **Sin radio de rueda.** Solo se usa para calcular $\omega$ y no afecta la temperatura;
+  incluirlo habría sido otro supuesto innecesario.
+- **$h = 40\ \mathrm{W/(m^2\,K)}$ y $T_0 = 25$ °C, como en el auto,** para que la comparación
+  aísle geometría, vehículo y materiales. En una moto, el disco expuesto probablemente tiene un
+  $h$ mayor; eso bajaría la temperatura final, no el pico (§6).
 - **Barrido del ancho del anillo** porque es el supuesto geométrico con más incertidumbre.
 
 ## 5. Cómo verificarlo
@@ -123,19 +136,20 @@ Barrido 'pastillas_moto': materials.pad = ['pad_limpert', 'sintered_pad_goo2014'
 
 ## 6. Resultados
 
-**Caso de moto** (preset `motorcycle`): T_max = **76,7 °C** en t = 3,26 s (antes de
-t_f = 3,54 s); T(60 s) = 66,6 °C; balance de 6,6e-14.
+**Caso de moto** (preset `motorcycle`): $T_{\max}$ = **76,7 °C** en $t = 3{,}26$ s (antes de
+$t_f = 3{,}54$ s); $T(60\ \mathrm{s}) = 66{,}6$ °C; balance de $6{,}6\times10^{-14}$.
 
 **Convergencia:**
 
-- Malla: ε = 0,007 % → 0,002 %, con orden observado p = 1,90 (≈ 2, el orden de P1).
-- Tiempo: p = 2,12, el segundo orden de Crank–Nicolson + Rannacher.
+- Malla: $\varepsilon$ = 0,007 % → 0,002 %, con orden observado $p = 1{,}90$ (≈ 2, el orden de
+  P1).
+- Tiempo: $p = 2{,}12$, el segundo orden de Crank–Nicolson + Rannacher.
 
-El error de discretización es despreciable (< 0,02 °C).
+El error de discretización es despreciable ($< 0{,}02$ °C).
 
 **Sensibilidad a los supuestos:**
 
-| Supuesto | Rango | T_max | T(60 s) |
+| Supuesto | Rango | $T_{\max}$ | $T(60\ \mathrm{s})$ |
 |---|---|---|---|
 | Ancho del anillo | 33,5 → 45 mm | 76,86 → 76,69 °C (±0,1) | 68,6 → 59,4 °C |
 | Pastilla | Cu sinterizada → orgánica | 76,7 → 112,4 °C | 66,6 → 95,3 °C |
@@ -144,14 +158,14 @@ El error de discretización es despreciable (< 0,02 °C).
 - La temperatura final sí depende, porque cambia la masa que se calienta.
 - La pastilla domina, igual que en el auto.
 
-**Auto frente a moto** (100 km/h, mismos h y T0):
+**Auto frente a moto** (100 km/h, mismos $h$ y $T_0$):
 
 | | Auto (`ejemplo_auto`) | Moto (`ejemplo_moto`) |
 |---|---|---|
 | Disco | hierro, 0,07–0,15 m × 20 mm | AISI 410, 0,114–0,149 m × 4,5 mm |
-| Energía por cara (antes de γ) | 101,3 kJ | 20,4 kJ |
-| γ | 0,850 | 0,483 |
-| T_max / T(60 s) | 106,7 / 75,9 °C | 76,7 / 66,6 °C |
+| Energía por cara (antes de $\gamma$) | 101,3 kJ | 20,4 kJ |
+| $\gamma$ | 0,850 | 0,483 |
+| $T_{\max}$ / $T(60\ \mathrm{s})$ | 106,7 / 75,9 °C | 76,7 / 66,6 °C |
 
 La moto disipa 5 veces menos energía por cara en un disco con 8,5 veces menos volumen (por
 cara). Además, la pastilla sinterizada se lleva más de la mitad del calor. Con la pastilla
@@ -159,14 +173,14 @@ orgánica de Limpert, la moto llegaría a 112 °C, más que el auto.
 
 ## 7. Limitaciones y riesgos
 
-- **Supuestos sin fuente:** ancho del anillo, piloto, φ, desaceleración y h. El ancho del anillo
-  tiene poco efecto en el pico; φ, la desaceleración y la masa escalan la energía de forma
-  lineal (Fase 6), así que su efecto es predecible.
+- **Supuestos sin fuente:** ancho del anillo, piloto, $\varphi$, desaceleración y $h$. El ancho
+  del anillo tiene poco efecto en el pico; $\varphi$, la desaceleración y la masa escalan la
+  energía de forma lineal (Fase 6), así que su efecto es predecible.
 - **Materiales no verificados** (410 y pastilla sinterizada, reportes F7_T3 a F7_T5). Es la
   principal fuente de incertidumbre: con otra pastilla el pico cambia hasta 36 °C.
-- **Se desprecia la conducción al porta-disco por los remaches.** Si fuera importante, bajaría la
-  temperatura, sobre todo la final.
-- **h = 40 es probablemente bajo** para un disco de moto expuesto al aire. Es un supuesto de
+- **Se desprecia la conducción al porta-disco por los remaches.** Si fuera importante, bajaría
+  la temperatura, sobre todo la final.
+- **$h = 40$ es probablemente bajo** para un disco de moto expuesto al aire. Es un supuesto de
   comparación, no un valor medido.
 - **Una sola frenada.** Las frenadas repetidas, donde el disco delgado acumula calor, no están
   modeladas (opcional en el PLAN).
@@ -174,14 +188,15 @@ orgánica de Limpert, la moto llegaría a 112 °C, más que el auto.
 ## 8. Para revisar y para el informe
 
 1. **Qué datos tienen fuente y cuáles son supuestos;** el YAML los marca uno por uno.
-2. **El disco de moto es térmicamente delgado** (e²/α ≈ 0,6 s ≪ t_f): temperatura casi uniforme
-   en el espesor y malla poco exigente. Es lo contrario del disco de auto.
+2. **El disco de moto es térmicamente delgado** ($e^2/\alpha \approx 0{,}6\ \mathrm{s} \ll t_f$):
+   temperatura casi uniforme en el espesor y malla poco exigente. Es lo contrario del disco de
+   auto.
 3. **El pico no depende del ancho del anillo, pero la temperatura final sí** (efecto local frente
    a efecto de capacidad).
 4. **La pastilla sigue siendo el factor dominante** (76,7 frente a 112,4 °C), y por eso pesa
    tanto que no esté verificada.
 5. **Para el informe** (en `results/ejemplo_moto/` y `results/estudio_moto/`):
    - `field.png`, `tmax.png` y `mesh.png`;
-   - las tablas de malla y Δt como validación;
+   - las tablas de malla y $\Delta t$ como validación;
    - `sweep_ancho_anillo.pdf` y `sweep_pastillas_moto.pdf`;
    - la tabla auto frente a moto de §6.

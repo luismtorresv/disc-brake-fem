@@ -24,7 +24,7 @@ Continuación de la Fase 7 (§5 de `PLAN.md`):
   - el preset `motorcycle` = `stainless_steel_410` + `sintered_pad_goo2014`.
 - `tests/test_profile_regions.py`:
   - `test_sintered_pad_entry_goo2014` (valores y fuente);
-  - `test_motorcycle_preset` (disco, pastilla, advertencias y γ);
+  - `test_motorcycle_preset` (disco, pastilla, advertencias y $\gamma$);
   - `test_preset_without_pad_needs_explicit_pad`, que reemplaza a la prueba anterior del preset
     de moto sin pastilla.
 - `PLAN.md` (ESTADO), `reportes/INDEX.md`, este reporte.
@@ -38,9 +38,9 @@ Continuación de la Fase 7 (§5 de `PLAN.md`):
 - las 124 apariciones de "thermal conductivity", "specific heat" o "diffusivity".
 
 Hay composiciones típicas (base cobre: Cu 65–80 %, Sn 7–9 %, Fe 4–7 %, Pb 5–10 %, grafito 3–8 %,
-SiO₂ 2–4 %) y coeficientes de fricción. **No hay ρ, c_p ni k del material de fricción.** El dato
-más cercano es k del bronce macizo con 5 % de Sn, ≈ 71 W/(m·K) (Tabla 4, p. 2091), pero es la
-matriz sin grafito, sin cerámicos y sin porosidad, así que no representa la pastilla.
+SiO₂ 2–4 %) y coeficientes de fricción. **No hay $\rho$, $c_p$ ni $k$ del material de fricción.**
+El dato más cercano es $k$ del bronce macizo con 5 % de Sn, ≈ 71 W/(m·K) (Tabla 4, p. 2091), pero
+es la matriz sin grafito, sin cerámicos y sin porosidad, así que no representa la pastilla.
 
 **La fuente usada.** Goo, B.-C. y Na, I.-K., "Topology Optimization of Railway Brake Pad by
 Contact Analysis", *J. Korean Soc. Tribol. Lubr. Eng.* 30(3):177–182, 2014,
@@ -49,20 +49,29 @@ pastilla del KTX):
 
 | Propiedad | Valor | Cargado |
 |---|---|---|
-| Densidad | 5,4 g/cm³ | 5400 kg/m³ |
-| Calor específico | 418 J/(kg·°C) | 418 J/(kg·K) |
-| Conductividad | 24 W/(m·°C) | 24 W/(m·K) |
+| Densidad $\rho$ | 5,4 g/cm³ | 5400 kg/m³ |
+| Calor específico $c$ | 418 J/(kg·°C) | 418 J/(kg·K) |
+| Conductividad $k$ | 24 W/(m·°C) | 24 W/(m·K) |
 
-**Por qué γ cambia tanto.** La fracción de calor que entra al disco es
-γ = e_d / (e_d + e_p), con la efusividad e = √(k ρ c). Para la pastilla de Limpert,
-e_p = 2146. Para la sinterizada, e_p = √(24 · 5400 · 418) = 7360, del mismo orden que la del
-disco 410 (e_d = 9545). Así, γ pasa de 0,816 a **0,565**: la pastilla metálica absorbe el 44 %
-del calor de fricción.
+**Por qué $\gamma$ cambia tanto.** La fracción de calor que entra al disco es
+
+$$
+\gamma = \frac{e_d}{e_d + e_p}, \qquad e = \sqrt{k \rho c}.
+$$
+
+Para la pastilla de Limpert, $e_p = 2146$. Para la sinterizada,
+
+$$
+e_p = \sqrt{24 \cdot 5400 \cdot 418} = 7360,
+$$
+
+del mismo orden que la del disco 410 ($e_d = 9545$). Así, $\gamma$ pasa de 0,816 a **0,565**: la
+pastilla metálica absorbe el 44 % del calor de fricción.
 
 ## 4. Decisiones
 
 - **`verified: false`.** El artículo usa esos valores como entrada de su modelo en ABAQUS: no
-  dice que los midiera ni cita de dónde salen. Además, su c = 418 es idéntico al del disco de
+  dice que los midiera ni cita de dónde salen. Además, su $c = 418$ es idéntico al del disco de
   acero de la misma tabla, lo que sugiere que lo copiaron, y la aplicación es ferroviaria. Todo
   queda escrito en `source` y en la cabecera de `materiales.yaml`, y cada corrida lo advierte.
 - **Uso en el preset `motorcycle`.** Lo autorizaste como la aproximación más cercana disponible
@@ -86,7 +95,7 @@ Salida real:
 All checks passed!
 ```
 
-Efusividades y γ (salida real):
+Efusividades y $\gamma$ (salida real):
 
 ```
 e410 9545.049160436416 e_goo 7360.217388093914 gamma 410+goo 0.5646198557730651 gamma 410+limpert 0.8164237361701493
@@ -103,7 +112,7 @@ stainless_steel_410      + sintered_pad_goo2014  gamma=0.5646 Tmax=90.31 en t=2.
 
 ## 6. Resultados
 
-| Disco + pastilla | γ | Energía al disco | T_max | T(60 s) |
+| Disco + pastilla | $\gamma$ | Energía al disco | $T_{\max}$ | $T(60\ \mathrm{s})$ |
 |---|---|---|---|---|
 | Hierro (Limpert) + pastilla Limpert | 0,850 | 86,0 kJ | 106,7 °C | 75,9 °C |
 | AISI 410 + pastilla Limpert | 0,816 | 82,7 kJ | 119,4 °C | 70,7 °C |
@@ -121,18 +130,20 @@ vehículo del auto, no un caso de moto real (§7).
 - **Ni la pastilla ni el disco de moto están verificados.** La pastilla viene de valores de
   entrada de un FEM ferroviario; el disco, de una ficha con un error de unidades. Cualquier
   resultado de moto debe presentarse con esa reserva.
-- **γ por efusividades supone contacto perfecto entre dos sólidos semi-infinitos.** Con una
-  pastilla muy conductora y delgada (la sinterizada de moto mide ~4–5 mm más la placa), esa
-  hipótesis es más discutible: la pastilla se "satura" antes y γ efectivo aumentaría con el
-  tiempo. El modelo no lo captura (CLAUDE.md: la resistencia de contacto está fuera de alcance).
-- **Recomendación para el informe:** un barrido de la pastilla entre Limpert (k ≈ 1,2) y
-  Goo y Na (k = 24) para mostrar la sensibilidad. Es la opción B que propuse; no está hecha.
+- **$\gamma$ por efusividades supone contacto perfecto entre dos sólidos semi-infinitos.** Con
+  una pastilla muy conductora y delgada (la sinterizada de moto mide ~4–5 mm más la placa), esa
+  hipótesis es más discutible: la pastilla se "satura" antes y $\gamma$ efectivo aumentaría con
+  el tiempo. El modelo no lo captura (CLAUDE.md: la resistencia de contacto está fuera de
+  alcance).
+- **Recomendación para el informe:** un barrido de la pastilla entre Limpert ($k \approx 1{,}2$)
+  y Goo y Na ($k = 24$) para mostrar la sensibilidad. Es la opción B que propuse; no está hecha.
 - **Sigue faltando un caso de moto con su geometría y vehículo** (disco delgado, masa, reparto).
 
 ## 8. Para revisar y para el informe
 
-1. **Por qué una pastilla conductora reduce el calor que entra al disco:** γ depende de la
-   razón de efusividades, y la sinterizada (e ≈ 7360) se acerca a la del acero (e ≈ 9545).
+1. **Por qué una pastilla conductora reduce el calor que entra al disco:** $\gamma$ depende de
+   la razón de efusividades, y la sinterizada ($e \approx 7360$) se acerca a la del acero
+   ($e \approx 9545$).
 2. **Por qué la pastilla pesa más que el disco** en estos resultados (31 % frente a 4 % de
    energía).
 3. **Qué fuentes se revisaron y por qué se descartaron:** ASM Vol. 7 (sin datos térmicos de

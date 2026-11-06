@@ -44,12 +44,16 @@ independiente por CHILEXPO SPA."
 
 | Propiedad | Ficha | Valor cargado | Comprobación |
 |---|---|---|---|
-| k | 26,9 W/(m·K) a 100 °C | 26,9 | 187 BTU·in/(h·ft²·°F) × 0,1442 = 26,97 W/(m·K) ✓ |
-| c_p | "0,46 Btu/lb/ºF" | 460 J/(kg·K) | 0,46 BTU/(lb·°F) serían 1926 J/(kg·K), imposible para un acero (~450–500). 0,46 es el valor en kJ/(kg·K), equivalente a 0,11 BTU/(lb·°F), como en la ficha de Cleveland-Cliffs |
-| ρ | 0,266 lb/in³ | 7362,85 kg/m³ | = 0,266 × 27 679,9. Es menor que en otras fuentes del 410 (≈ 0,28 lb/in³ ≈ 7750). Se respeta la ficha y queda anotado |
+| $k$ | 26,9 W/(m·K) a 100 °C | 26,9 | 187 BTU·in/(h·ft²·°F) × 0,1442 = 26,97 W/(m·K) ✓ |
+| $c_p$ | "0,46 Btu/lb/ºF" | 460 J/(kg·K) | 0,46 BTU/(lb·°F) serían 1926 J/(kg·K), imposible para un acero (~450–500). 0,46 es el valor en kJ/(kg·K), equivalente a 0,11 BTU/(lb·°F), como en la ficha de Cleveland-Cliffs |
+| $\rho$ | 0,266 lb/in³ | 7362,85 kg/m³ | $= 0{,}266 \times 27\,679{,}9$. Es menor que en otras fuentes del 410 (≈ 0,28 lb/in³ ≈ 7750). Se respeta la ficha y queda anotado |
 
-Con la pastilla de Limpert: efusividad del 410 = 9545, del hierro de Limpert = 12 115, de la
-pastilla = 2146; γ(410 + pastilla de Limpert) = 0,8164.
+Con la pastilla de Limpert, las efusividades $e = \sqrt{k\rho c}$ son: 410 = 9545, hierro de
+Limpert = 12 115, pastilla = 2146; por tanto
+
+$$
+\gamma(\text{410 + pastilla de Limpert}) = \frac{9545}{9545 + 2146} = 0{,}8164 .
+$$
 
 **Preset `motorcycle`.** Define `disc: stainless_steel_410` sin pastilla. Con `gamma: auto`, la
 config debe dar `materials.pad`; si no, el error es: "gamma: auto necesita una pastilla y el
@@ -58,20 +62,20 @@ preset 'motorcycle' no la define; indique materials.pad (o un gamma numérico)."
 ## 4. Decisiones
 
 - **No usé la ficha del 4140.** Es otro acero (~1 % de Cr frente a 11,5–13,5 %), no es el de los
-  discos de moto y le falta c_p.
+  discos de moto y le falta $c_p$.
 - **`verified: false` para el 410.** La ficha se declara no verificada, tiene un error de unidad
   y una densidad atípica. Que cada corrida lo advierta es lo honesto. Para pasarlo a
   `verified: true` conviene contrastarlo con la ficha del fabricante (ATI, Outokumpu) o con el
   ASM Handbook.
-- **c_p = 460 J/(kg·K)**, y no 1926, aunque la etiqueta de la ficha diga BTU. No es inventar un
+- **$c_p = 460$ J/(kg·K)**, y no 1926, aunque la etiqueta de la ficha diga BTU. No es inventar un
   valor: es el mismo número de la ficha (0,46) con la única unidad físicamente posible, y
   coincide con 0,11 BTU/(lb·°F) de otras fichas del 410. La interpretación queda escrita en el
   `source`.
-- **ρ tal cual (7363 kg/m³)**, aunque parezca baja. Corregirla a 7750 sería usar un valor que no
-  está en la fuente que me diste.
+- **$\rho$ tal cual (7363 kg/m³)**, aunque parezca baja. Corregirla a 7750 sería usar un valor
+  que no está en la fuente que me diste.
 - **El preset `motorcycle` sin pastilla por defecto.** Asignar en silencio la pastilla de auto
-  de Limpert (base asbesto) a una moto, que usa pastillas sinterizadas con k mucho mayor,
-  falsearía γ. Por eso la config debe elegir la pastilla de forma explícita.
+  de Limpert (base asbesto) a una moto, que usa pastillas sinterizadas con $k$ mucho mayor,
+  falsearía $\gamma$. Por eso la config debe elegir la pastilla de forma explícita.
 
 ## 5. Cómo verificarlo
 
@@ -109,39 +113,39 @@ stainless_steel_410      gamma=0.8164 Tmax=119.44 en t=2.834  T60=70.65  E_in=82
 Es una comparación de **material** sobre la geometría y el vehículo del auto, no un caso de
 moto:
 
-| Disco | k [W/(m·K)] | ρc [J/(m³·K)] | γ | T_max | t(T_max) | T(60 s) |
+| Disco | $k$ [W/(m·K)] | $\rho c$ [J/(m³·K)] | $\gamma$ | $T_{\max}$ | $t(T_{\max})$ | $T(60\ \mathrm{s})$ |
 |---|---|---|---|---|---|---|
-| Hierro fundido (Limpert) | 48,46 | 3,03e6 | 0,8495 | 106,70 °C | 3,50 s | 75,88 °C |
-| Inoxidable AISI 410 (Chilexpo) | 26,9 | 3,39e6 | 0,8164 | 119,44 °C | 2,83 s | 70,65 °C |
+| Hierro fundido (Limpert) | 48,46 | $3{,}03\times10^{6}$ | 0,8495 | 106,70 °C | 3,50 s | 75,88 °C |
+| Inoxidable AISI 410 (Chilexpo) | 26,9 | $3{,}39\times10^{6}$ | 0,8164 | 119,44 °C | 2,83 s | 70,65 °C |
 
 - El 410 conduce casi la mitad. El calor se queda cerca de la superficie, así que el pico es
   12,7 °C mayor y llega antes.
 - Al final, con el disco casi uniforme, manda la energía sobre la capacidad. Entra menos
-  energía (γ menor, −3,9 %) en un disco con más capacidad volumétrica (+12 %), y eso da 5,2 °C
-  menos.
+  energía ($\gamma$ menor, −3,9 %) en un disco con más capacidad volumétrica (+12 %), y eso da
+  5,2 °C menos.
 
 ## 7. Limitaciones y riesgos
 
-- **El 410 no está verificado**, por la unidad de c_p, la densidad atípica y la advertencia de
+- **El 410 no está verificado**, por la unidad de $c_p$, la densidad atípica y la advertencia de
   la propia ficha. Antes del informe hay que contrastarlo con una ficha de fabricante.
-- **Las propiedades del 410 son a 0–100 °C** (c_p) y a 100 °C (k), y además dependen del
+- **Las propiedades del 410 son a 0–100 °C** ($c_p$) y a 100 °C ($k$), y además dependen del
   tratamiento térmico. Los discos de moto van templados; la ficha no distingue el estado para
   las propiedades físicas.
-- **Falta la pastilla sinterizada.** Con ella, γ bajaría mucho, porque una pastilla metálica
-  tiene k de decenas de W/(m·K), y el pico calculado para la moto cambiaría. Hasta tener esa
-  fuente, cualquier caso de moto debe declarar qué pastilla usa.
+- **Falta la pastilla sinterizada.** Con ella, $\gamma$ bajaría mucho, porque una pastilla
+  metálica tiene $k$ de decenas de W/(m·K), y el pico calculado para la moto cambiaría. Hasta
+  tener esa fuente, cualquier caso de moto debe declarar qué pastilla usa.
 - **No hay un caso de moto con su geometría y vehículo propios** (disco más delgado, masa y
   reparto de una moto). Esos datos no son propiedades de material, pero tampoco tengo fuente
   para ellos; quedan por definir contigo.
 
 ## 8. Para revisar y para el informe
 
-1. **Cómo detectar un error de unidades en una ficha:** el orden de magnitud físico (c_p de
+1. **Cómo detectar un error de unidades en una ficha:** el orden de magnitud físico ($c_p$ de
    aceros ~450–500 J/(kg·K)) y la coherencia entre columnas (BTU frente a SI).
 2. **Por qué el 410 se calienta más en el pico pero menos al final:** conductividad frente a
-   capacidad térmica volumétrica y γ.
-3. **Por qué el preset de moto no trae pastilla:** γ depende fuertemente de la efusividad de la
-   pastilla, y asignar la de un auto ocultaría esa dependencia.
+   capacidad térmica volumétrica y $\gamma$.
+3. **Por qué el preset de moto no trae pastilla:** $\gamma$ depende fuertemente de la efusividad
+   de la pastilla, y asignar la de un auto ocultaría esa dependencia.
 4. **Fuentes para el informe:** Limpert (Tabla 3-1A) para hierro y pastilla; ficha Chilexpo
    "Aleación 410" (con sus advertencias) para el acero de moto.
 5. **Para el informe:** la tabla de §6 como comparación de materiales del disco. Cuando haya

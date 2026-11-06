@@ -12,17 +12,22 @@ Hubo dos ajustes de pruebas, explicados en §4:
 - Una prueba nueva tenía un umbral mío sin justificación ("> 100 nodos"). Se reemplazó por la
   afirmación exacta que corresponde.
 
+> **Nota (2026-11-05, F8_T2).** Los valores del perfil en §5 y §6 se calcularon con los
+> materiales supuestos del prototipo. Con los materiales actuales del preset `car` (Limpert) el
+> perfil da $T_{\max} = 106{,}71$ °C y $T(60\ \mathrm{s}) = 73{,}9$ °C; ver
+> `F8_T2_guia-uso-e-insumos-informe.md`. La conclusión cualitativa no cambia.
+
 ## 1. Qué se pidió
 
 Fase 7 de `PLAN.md` (§5, "Fase 7 — Generalización", en modo plan primero):
 
-- (a) `geometry.type: profile`, un polígono (r, z) antihorario con grupos de frontera por
+- (a) `geometry.type: profile`, un polígono $(r, z)$ antihorario con grupos de frontera por
   tramos;
 - (b) regiones con materiales distintos;
-- (c) nada de k(T).
+- (c) nada de $k(T)$.
 
 Criterios: el caso rectangular sigue dando exactamente los mismos resultados, y dos regiones
-con material idéntico reproducen el caso homogéneo a 1e-12.
+con material idéntico reproducen el caso homogéneo a $10^{-12}$.
 
 Decisiones tuyas en esta sesión:
 
@@ -31,7 +36,7 @@ Decisiones tuyas en esta sesión:
   catálogo por tipo de vehículo y la posibilidad de que el usuario describa sus propios
   materiales;
 - un override hipotético no basta como ejemplo;
-- h y T∞ por grupo de frontera;
+- $h$ y $T_\infty$ por grupo de frontera;
 - me pasarás la fuente (Limpert) para los valores del catálogo.
 
 ## 2. Qué se hizo
@@ -40,11 +45,11 @@ Decisiones tuyas en esta sesión:
   - `ProfileGeometry` (polígono + un grupo por lado) y `RectangleGeometry`, que ahora admite
     `regions`.
   - `geometry_from_dict`.
-  - Utilidades de polígonos: área, ∫ r dA exacto, intersección de segmentos, punto en polígono
-    y distancia punto–segmento.
+  - Utilidades de polígonos: área, $\int r\, dA$ exacto, intersección de segmentos, punto en
+    polígono y distancia punto–segmento.
   - Validaciones en español.
 - `src/discfem/mesh/gmsh_backend.py`: dos caminos.
-  - `geo`, sin regiones: es el mismo código de antes generalizado a n lados.
+  - `geo`, sin regiones: es el mismo código de antes generalizado a $n$ lados.
   - OCC + `fragment`, con regiones: clasificación geométrica de triángulos y aristas, y
     control de áreas por región.
 - `src/discfem/mesh/structured.py`: rechaza perfiles y regiones con un mensaje claro.
@@ -57,17 +62,18 @@ Decisiones tuyas en esta sesión:
   - `materials.regions` debe nombrar exactamente las regiones de la geometría;
   - nuevas claves `materials.preset`, `materials.custom` y `convection.per_group`.
 - `src/discfem/solver.py`: resuelve presets y materiales propios, y añade
-  `assemble_convection` (h y T∞ por grupo). El `summary` gana las secciones `geometry` y
-  `convection`.
+  `assemble_convection` ($h$ y $T_\infty$ por grupo). El `summary` gana las secciones `geometry`
+  y `convection`.
 - `src/discfem/postprocess.py`:
   - `plot_mesh` sombrea las regiones;
-  - el campo se refleja solo si `symmetry` está en z = 0;
+  - el campo se refleja solo si `symmetry` está en $z = 0$;
   - los perfiles en profundidad omiten los puntos fuera de un perfil no convexo
     (`interpolation_matrix(..., allow_outside=True)`).
-- `src/discfem/cli.py`: `mesh` acepta perfiles e imprime ∫ r dA exacto y el área de cada región.
+- `src/discfem/cli.py`: `mesh` acepta perfiles e imprime $\int r\, dA$ exacto y el área de cada
+  región.
 - `configs/materiales.yaml`: formato con secciones y preset `car` (mismos materiales, todavía
   no verificados). `motorcycle` está pendiente.
-- `configs/ejemplo_perfil.yaml`: nuevo. Disco con cubo interior más grueso, preset `car` y h
+- `configs/ejemplo_perfil.yaml`: nuevo. Disco con cubo interior más grueso, preset `car` y $h$
   mayor en `r_outer`.
 - `tests/data/golden_rectangle.json`: nuevo. Referencia del rectángulo capturada **antes** de
   cualquier cambio (commit `c930b37`).
@@ -78,31 +84,39 @@ Decisiones tuyas en esta sesión:
 ## 3. Cómo funciona
 
 **Perfil poligonal.** En la sección axisimétrica, cualquier forma de revolución se describe
-con su contorno en el plano (r, z). El YAML da los vértices en sentido antihorario, de modo que
+con su contorno en el plano $(r, z)$. El YAML da los vértices en sentido antihorario, de modo que
 el dominio queda a la izquierda al recorrerlos, igual que en la convención de normales
 exteriores de la Fase 1. También da el grupo de cada lado. Las validaciones son:
 
-- polígono simple (sin autointersecciones), antihorario y con r ≥ 0;
+- polígono simple (sin autointersecciones), antihorario y con $r \ge 0$;
 - un grupo por lado, con los nombres de CLAUDE.md;
 - `brake` debe ser una cadena contigua de lados horizontales.
 
 La última condición es necesaria porque la carga de la Fase 4,
-q(r, t) = γ φ m a v(t) /(2π n_d n_c) · g(r) r / I_g, reparte la potencia sobre r ∈ [r_a, r_b]
-en un plano z = cte. r_a y r_b se toman de los extremos de esa cadena.
+
+$$
+q(r, t) = \frac{\gamma\, \varphi\, m\, a\, v(t)}{2\pi\, n_d\, n_c}\cdot\frac{g(r)\, r}{I_g},
+$$
+
+reparte la potencia sobre $r \in [r_a, r_b]$ en un plano $z$ = cte. $r_a$ y $r_b$ se toman de
+los extremos de esa cadena.
 
 La prueba T1 se generaliza con la fórmula exacta del momento del polígono, que es la referencia
-de Σ A·r̄ de la malla:
+de $\sum A\,\bar r$ de la malla:
 
-∫ r dA = (1/6) Σ_i (r_i + r_{i+1})(r_i z_{i+1} − r_{i+1} z_i)
+$$
+\int_\Omega r\, dA = \frac{1}{6}\sum_i (r_i + r_{i+1})\,(r_i\, z_{i+1} - r_{i+1}\, z_i)
+$$
 
-**Malla sin regiones (kernel `geo`).** Es el código de las fases 1–6 con n lados en vez de 6.
+**Malla sin regiones (kernel `geo`).** Es el código de las fases 1–6 con $n$ lados en vez de 6.
 Para el rectángulo, la secuencia de llamadas a Gmsh es idéntica, por eso la malla resulta
 idéntica bit a bit, y eso se verifica contra la referencia guardada antes de los cambios.
 
 **Malla con regiones (kernel OCC).** Cada región es un polígono dentro de la sección. La
 operación booleana `fragment` parte la sección en superficies que comparten las aristas de las
 interfaces. Así, la malla es **conforme**: ningún triángulo cruza una interfaz entre
-materiales, y k y ρc son constantes en cada triángulo, como supone el ensamblaje de la Fase 2.
+materiales, y $k$ y $\rho c$ son constantes en cada triángulo, como supone el ensamblaje de la
+Fase 2.
 
 Después de mallar, en vez de seguir los números de entidad que Gmsh reasigna al fragmentar,
 se clasifica por geometría:
@@ -111,8 +125,8 @@ se clasifica por geometría:
   interfaz);
 - cada arista de borde va al lado del perfil sobre el que están sus dos extremos.
 
-El control es comparar el área mallada de cada región con la del polígono a 1e-9. Si una región
-se solapa con otra o sale del dominio, falla con un mensaje claro.
+El control es comparar el área mallada de cada región con la del polígono a $10^{-9}$. Si una
+región se solapa con otra o sale del dominio, falla con un mensaje claro.
 
 **Materiales.**
 
@@ -120,28 +134,32 @@ se solapa con otra o sale del dominio, falla con un mensaje claro.
   Lo escrito explícitamente en `regions` o `pad` tiene prioridad.
 - `materials.custom` permite definir materiales en el YAML de la corrida, con las mismas
   validaciones que la librería (`source` y `verified` obligatorios, rangos de sanidad).
-- γ automático usa el material bajo `brake`. Con una capa bajo la pista, es el de la capa.
+- $\gamma$ automático usa el material bajo `brake`. Con una capa bajo la pista, es el de la capa.
 
-**Convección por grupo.** La condición de Robin −k ∇T·n = h_g (T − T∞,g) puede tener h y T∞
-distintos en cada grupo:
+**Convección por grupo.** La condición de Robin
+$-k\, \nabla T \cdot \mathbf{n} = h_g\,(T - T_{\infty,g})$ puede tener $h$ y $T_\infty$ distintos
+en cada grupo $g$:
 
-- H = Σ_g H_g(h_g);
-- F_conv = Σ_g H_g·(T∞,g 1), usando la identidad ∫ h T∞ φ_i r ds = (H T∞ 1)_i de la Fase 2.
+$$
+\mathbf{H} = \sum_g \mathbf{H}_g(h_g), \qquad
+\mathbf{F}_{\text{conv}} = \sum_g \mathbf{H}_g\,(T_{\infty,g}\, \mathbf{1}),
+$$
 
-Si todos los grupos comparten h y T∞, se ensambla en una sola llamada, como antes, para no
-cambiar el orden de las sumas en punto flotante.
+usando la identidad $\int h\, T_\infty\, \varphi_i\, r\, ds = (\mathbf{H}\, T_\infty \mathbf{1})_i$
+de la Fase 2. Si todos los grupos comparten $h$ y $T_\infty$, se ensambla en una sola llamada,
+como antes, para no cambiar el orden de las sumas en punto flotante.
 
 | Elemento | Código |
 |---|---|
-| ∫ r dA exacto del polígono | `polygon_r_moment`, `geometry.py:50` |
-| Validación del polígono (simple, antihorario, r ≥ 0) | `_validate_polygon`, `geometry.py:103` |
-| Perfil, r_a y r_b desde `brake` | `ProfileGeometry`, `geometry.py:276`; `r_a`/`r_b`, `:329-334` |
+| $\int r\, dA$ exacto del polígono | `polygon_r_moment`, `geometry.py:50` |
+| Validación del polígono (simple, antihorario, $r \ge 0$) | `_validate_polygon`, `geometry.py:103` |
+| Perfil, $r_a$ y $r_b$ desde `brake` | `ProfileGeometry`, `geometry.py:276`; `r_a`/`r_b`, `:329-334` |
 | Rectángulo con regiones | `RectangleGeometry`, `geometry.py:192` |
 | Malla sin regiones (idéntica para el rectángulo) | `_mesh_geo_kernel`, `gmsh_backend.py:137` |
 | Malla con regiones (OCC + fragment) | `_mesh_occ_kernel`, `gmsh_backend.py:172` |
 | Clasificación de aristas y regiones | `_classify_boundary` (`:97`), `_classify_regions` (`:118`) |
 | Presets y materiales propios | `load_presets` (`materials.py:170`), `add_custom_materials` (`:191`); `solver.py:94` |
-| H y F_conv por grupo | `assemble_convection`, `solver.py:156`; `per_group`, `config.py:198` |
+| $\mathbf{H}$ y $\mathbf{F}_{\text{conv}}$ por grupo | `assemble_convection`, `solver.py:156`; `per_group`, `config.py:198` |
 | Regiones de material = regiones de la geometría | `config.py:166` |
 
 ## 4. Decisiones
@@ -154,7 +172,7 @@ cambiar el orden de las sumas en punto flotante.
   Es independiente de cómo `fragment` renumera las entidades, y funciona igual para
   rectángulos y perfiles.
 - **`brake` horizontal y contigua.** Una pista inclinada o partida necesitaría otra
-  normalización de q(r). Fuera de alcance.
+  normalización de $q(r)$. Fuera de alcance.
 - **La malla estructurada no se generaliza.** Una rejilla tensorial no sigue polígonos
   arbitrarios. El error dice qué hacer (usar `gmsh`).
 - **Materiales: no invento ninguno.** Busqué fuentes primarias (§7). Las únicas legibles eran
@@ -165,9 +183,10 @@ cambiar el orden de las sumas en punto flotante.
   - `test_solver.py` esperaba el mensaje "una sola región". La configuración inválida se sigue
     rechazando, pero ahora con el mensaje general "regiones que la geometría no tiene".
   - En `test_regions_areas_and_conformity` había escrito "> 100 nodos en la interfaz", un
-    número sin justificar. Con h ≈ 6,7e-4 m a 1 mm de la pista, 0,06 m de interfaz dan ~90
-    nodos (hay 91). Lo reemplacé por la afirmación exacta: las aristas de la malla sobre
-    z = 0,009 suman 0,06 m a 1e-12, es decir, la interfaz está completamente mallada.
+    número sin justificar. Con $h \approx 6{,}7\times10^{-4}$ m a 1 mm de la pista, 0,06 m de
+    interfaz dan ~90 nodos (hay 91). Lo reemplacé por la afirmación exacta: las aristas de la
+    malla sobre $z = 0{,}009$ suman 0,06 m a $10^{-12}$, es decir, la interfaz está completamente
+    mallada.
 
 ## 5. Cómo verificarlo
 
@@ -221,23 +240,23 @@ Caso 'ejemplo_perfil_cubo': 3047 nodos, 5610 triángulos, 1080 pasos (θ = 0.5, 
 
 | Criterio | Resultado |
 |---|---|
-| Rectángulo idéntico (malla, aristas, T final, summary), gmsh y estructurada | idéntico bit a bit |
+| Rectángulo idéntico (malla, aristas, $T$ final, summary), gmsh y estructurada | idéntico bit a bit |
 | Perfil con las 6 esquinas del rectángulo = rectángulo | misma malla y mismas aristas |
-| Perfil con cubo: Σ A·r̄ frente a ∫ r dA exacto | 1,5e-16 |
-| Perfil: 2π Σ F_brake frente a γ P_f | < 1e-12 |
-| Capa: área mallada de la región frente al polígono | < 1e-12 |
-| Dos regiones con el mismo material frente a una sola, misma malla (criterio del PLAN) | < 1e-12 relativo al aumento de T |
+| Perfil con cubo: $\sum A\,\bar r$ frente a $\int r\, dA$ exacto | $1{,}5\times10^{-16}$ |
+| Perfil: $2\pi\sum_i F_{\text{brake},i}$ frente a $\gamma P_f$ | $< 10^{-12}$ |
+| Capa: área mallada de la región frente al polígono | $< 10^{-12}$ |
+| Dos regiones con el mismo material frente a una sola, misma malla (criterio del PLAN) | $< 10^{-12}$ relativo al aumento de $T$ |
 | Capa con el mismo material frente a la malla sin capa | 102,269 frente a 102,297 °C (0,03 %, solo discretización) |
-| Capa menos conductora (k = 25, material de prueba) | T_max sube más de 1 °C; γ baja (usa el material de la capa) |
+| Capa menos conductora ($k = 25$, material de prueba) | $T_{\max}$ sube más de 1 °C; $\gamma$ baja (usa el material de la capa) |
 | `per_group` igual al global | resultados idénticos |
 
 Lectura física del ejemplo de perfil:
 
-- El cubo más grueso añade masa térmica lejos de la pista. T_max casi no cambia (102,93 °C con
-  CN + Rannacher, igual que el rectángulo con el mismo esquema), porque el pico es superficial
-  y ocurre antes de que el calor llegue al cubo.
+- El cubo más grueso añade masa térmica lejos de la pista. $T_{\max}$ casi no cambia (102,93 °C
+  con CN + Rannacher, igual que el rectángulo con el mismo esquema), porque el pico es
+  superficial y ocurre antes de que el calor llegue al cubo.
 - La temperatura final baja de ~72,8 a 70,96 °C: misma energía repartida en más volumen, y más
-  convección por h = 60 en `r_outer`.
+  convección por $h = 60$ en `r_outer`.
 - La sonda del cubo llega a su máximo a los 52 s: así de lento es el transporte radial por
   conducción.
 
@@ -245,8 +264,8 @@ Lectura física del ejemplo de perfil:
 
 - **Catálogo de materiales reales PENDIENTE.** Lo que encontré y por qué no lo usé:
   - Hierro gris: Jogineedi et al., SAE 2021-01-5106, Tabla 4. Son mediciones de rotores ASTM A48
-    a 25 °C (k = 68–78 W/(m·K), c_p = 0,63–0,66 J/(g·K)), muy distintas de los valores de
-    manual, y sin la densidad en el texto extraíble.
+    a 25 °C ($k$ = 68–78 $\mathrm{W/(m\,K)}$, $c_p$ = 0,63–0,66 $\mathrm{J/(g\,K)}$), muy
+    distintas de los valores de manual, y sin la densidad en el texto extraíble.
   - Acero: la ficha de Cleveland-Cliffs es del **410S** (ferrítico, no templable), no del
     410/420 martensítico de los discos de moto.
   - Pastillas: los artículos FEM consultados difieren un orden de magnitud entre sí.
@@ -254,22 +273,22 @@ Lectura física del ejemplo de perfil:
   Espero la fuente (Limpert) para cargar valores con tabla y página en `source`.
 - **Superficie de fricción horizontal.** Una pista cónica o inclinada no está soportada.
 - **La malla con regiones no reproduce bit a bit la malla sin regiones.** Es inevitable: las
-  interfaces añaden aristas. La comparación válida (1e-12) es sobre la misma malla.
-- **La clasificación de aristas usa una tolerancia geométrica** (1e-9 × tamaño). Perfiles con
-  lados de menos de ~1e-10 m no están contemplados.
+  interfaces añaden aristas. La comparación válida ($10^{-12}$) es sobre la misma malla.
+- **La clasificación de aristas usa una tolerancia geométrica** ($10^{-9}$ × tamaño). Perfiles
+  con lados de menos de ~$10^{-10}$ m no están contemplados.
 - **La figura del campo en el perfil** deja espacio en blanco a la izquierda (aspecto igual con
   paneles altos). Es cosmético.
 
 ## 8. Para revisar y para el informe
 
-1. **Cómo un polígono (r, z) describe un sólido de revolución** y por qué ∫ r dA (no el área)
-   es la prueba de que la malla está completa.
-2. **Qué significa una malla conforme en las interfaces** y por qué hace falta. k y ρc son
-   constantes por triángulo; un triángulo que cruzara la interfaz promediaría dos materiales.
+1. **Cómo un polígono $(r, z)$ describe un sólido de revolución** y por qué $\int r\, dA$ (no el
+   área) es la prueba de que la malla está completa.
+2. **Qué significa una malla conforme en las interfaces** y por qué hace falta. $k$ y $\rho c$
+   son constantes por triángulo; un triángulo que cruzara la interfaz promediaría dos materiales.
 3. **Por qué el rectángulo debía dar el mismo resultado bit a bit** (no romper lo validado) y
    cómo se logró: mismo kernel y misma secuencia de llamadas.
-4. **El criterio "dos regiones iguales = homogéneo a 1e-12"** prueba el ensamblaje por regiones
-   sobre la misma malla. Contra otra malla solo cabe esperar el error de discretización
+4. **El criterio "dos regiones iguales = homogéneo a $10^{-12}$"** prueba el ensamblaje por
+   regiones sobre la misma malla. Contra otra malla solo cabe esperar el error de discretización
    (0,03 %).
 5. **Para el informe:**
    - `results/ejemplo_perfil/field.png` y `mesh.png`: ejemplo de perfil no rectangular.

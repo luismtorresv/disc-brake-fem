@@ -1,7 +1,7 @@
-# F6 · T1 — Estudios de convergencia (malla y Δt) y barridos paramétricos
+# F6 · T1 — Estudios de convergencia (malla y $\Delta t$) y barridos paramétricos
 
 Todas las pruebas pasaron (194 passed) sin relajar tolerancias. El barrido de "materiales" es
-una **sensibilidad** de k del disco (±20 % sobre el valor supuesto), no una comparación entre
+una **sensibilidad** de $k$ del disco (±20 % sobre el valor supuesto), no una comparación entre
 materiales reales. No se inventaron materiales (regla 4); se explica en §4.
 
 ## 1. Qué se pidió
@@ -9,94 +9,101 @@ materiales reales. No se inventaron materiales (regla 4); se explica en §4.
 Fase 6 de `PLAN.md` (§5, "Fase 6 — Estudios de convergencia y paramétricos"):
 
 - `convergence.py` y `python -m discfem study`.
-- Estudio de malla con `refine_factor` = 1, 2, 4, 8 y el mismo Δt. Tabla con nodos, elementos,
-  T_max, instante de T_max, ε_malla, orden observado p y tiempo de cómputo. Seleccionar el
-  primer nivel con ε < 1 % también en las sondas.
-- Estudio de Δt aparte (Δt, Δt/2, Δt/4).
-- Barridos sobre a, v0, m y materiales, con tabla y figura comparativa.
+- Estudio de malla con `refine_factor` = 1, 2, 4, 8 y el mismo $\Delta t$. Tabla con nodos,
+  elementos, $T_{\max}$, instante de $T_{\max}$, $\varepsilon_{\text{malla}}$, orden observado $p$
+  y tiempo de cómputo. Seleccionar el primer nivel con $\varepsilon < 1\,\%$ también en las sondas.
+- Estudio de $\Delta t$ aparte ($\Delta t$, $\Delta t/2$, $\Delta t/4$).
+- Barridos sobre $a$, $v_0$, $m$ y materiales, con tabla y figura comparativa.
 - Figuras listas para el informe (PDF vectorial).
 
 Criterios: el estudio de malla del caso de referencia cierra por debajo de 1 % desde el segundo
 nivel (el prototipo bajó de 0,12 % a 0,01 %), y los barridos reproducen la tendencia esperada
-(más desaceleración o más masa → más T_max).
+(más desaceleración o más masa → más $T_{\max}$).
 
 ## 2. Qué se hizo
 
 - `src/discfem/convergence.py`: nuevo. Fórmulas (`relative_change_percent`, `observed_order`),
   `convergence_table`, `mesh_study`, `timestep_study`, `parameter_sweep`, tablas CSV y
   Markdown, figuras PDF + PNG, `load_study` y `run_study`.
-- `configs/estudio_malla.yaml`: nuevo. Estudio del caso de referencia: malla 1/2/4/8, Δt 1/2/4
-  y barridos de a, v0, m y k del disco.
-- `src/discfem/timestepping.py`: `integrate(..., probe_matrix=P)` registra P·T en todos los
-  pasos sin guardar los campos completos.
-- `src/discfem/config.py`: nuevas claves `time.steps_per_tf` (para el estudio de Δt con
+- `configs/estudio_malla.yaml`: nuevo. Estudio del caso de referencia: malla 1/2/4/8,
+  $\Delta t$ 1/2/4 y barridos de $a$, $v_0$, $m$ y $k$ del disco.
+- `src/discfem/timestepping.py`: `integrate(..., probe_matrix=P)` registra
+  $\mathbf{P}\,\mathbf{T}$ en todos los pasos sin guardar los campos completos.
+- `src/discfem/config.py`: nuevas claves `time.steps_per_tf` (para el estudio de $\Delta t$ con
   `dt: auto`) y `output.save_every`.
 - `src/discfem/solver.py` y `postprocess.py`: las sondas salen de `probe_history`, con todos
   los pasos aunque `save_every > 1`.
 - `src/discfem/cli.py`: comando `study` (también con `--set`). El estado global de `warnings`
   se restaura al salir de `main`.
-- `tests/test_convergence.py`: nuevo. Fórmulas, selección, criterio de la fase, orden en Δt,
-  tendencias, salidas, validación y CLI (20 casos).
+- `tests/test_convergence.py`: nuevo. Fórmulas, selección, criterio de la fase, orden en
+  $\Delta t$, tendencias, salidas, validación y CLI (20 casos).
 - `PLAN.md` (ESTADO), `reportes/INDEX.md`, este reporte.
 
 ## 3. Cómo funciona
 
-**Qué es un estudio de convergencia.** La solución discreta T_h depende del tamaño de malla h y
-del paso Δt. Si el método converge, al refinar T_h se acerca a la solución exacta, y las
-diferencias entre niveles sucesivos se achican. Como no se conoce la solución exacta del caso de
-referencia, se comparan niveles consecutivos:
+**Qué es un estudio de convergencia.** La solución discreta $T_h$ depende del tamaño de malla
+$h$ y del paso $\Delta t$. Si el método converge, al refinar $T_h$ se acerca a la solución
+exacta, y las diferencias entre niveles sucesivos se achican. Como no se conoce la solución
+exacta del caso de referencia, se comparan niveles consecutivos:
 
-ε_i = |Q_i − Q_{i−1}| / |Q_i| × 100 %
+$$
+\varepsilon_i = \frac{\lvert Q_i - Q_{i-1} \rvert}{\lvert Q_i \rvert} \times 100\,\%
+$$
 
-Aquí Q es T_max, o el máximo en el tiempo de la temperatura en cada sonda, e i es el nivel de
-refinamiento. Si el error se comporta como C·h^p, con tres niveles separados por un factor ρ
-(ρ = 2 aquí) se puede estimar el exponente p sin conocer la solución exacta:
+Aquí $Q$ es $T_{\max}$, o el máximo en el tiempo de la temperatura en cada sonda, e $i$ es el
+nivel de refinamiento. Si el error se comporta como $C\,h^p$, con tres niveles separados por un
+factor $\rho$ ($\rho = 2$ aquí) se puede estimar el exponente $p$ sin conocer la solución exacta:
 
-p = log(|Q_{i−2} − Q_{i−1}| / |Q_{i−1} − Q_i|) / log ρ
+$$
+p = \frac{\log\left(\lvert Q_{i-2} - Q_{i-1} \rvert \,/\, \lvert Q_{i-1} - Q_i \rvert\right)}{\log \rho}
+$$
 
-Con ρ = 2, esta es la fórmula del PLAN. Una prueba verifica que, para Q = Q* + C h^p sintética,
-la función devuelve p a 1e-10.
+Con $\rho = 2$, esta es la fórmula del PLAN:
+$p = \log_2\left(\lvert T_h - T_{h/2} \rvert / \lvert T_{h/2} - T_{h/4} \rvert\right)$. Una
+prueba verifica que, para $Q = Q^* + C h^p$ sintética, la función devuelve $p$ a $10^{-10}$.
 
-**Estudio de malla.** Una corrida por `refine_factor`, con el mismo Δt (`dt: auto` = t_f/100 no
-depende de la malla). Se selecciona el primer nivel i ≥ 1 con ε_i < 1 % en T_max **y** en todas
-las sondas. Hay una prueba con datos sintéticos donde T_max ya converge pero una sonda no: se
-elige el nivel siguiente.
+**Estudio de malla.** Una corrida por `refine_factor`, con el mismo $\Delta t$ (`dt: auto` =
+$t_f/100$ no depende de la malla). Se selecciona el primer nivel $i \ge 1$ con
+$\varepsilon_i < 1\,\%$ en $T_{\max}$ **y** en todas las sondas. Hay una prueba con datos
+sintéticos donde $T_{\max}$ ya converge pero una sonda no: se elige el nivel siguiente.
 
-**Estudio de Δt.** Mismo procedimiento con Δt, Δt/2, Δt/4, sobre la malla seleccionada. Con
-`dt: auto` se varía `time.steps_per_tf` (100, 200, 400), así t_f sigue en la malla temporal.
+**Estudio de $\Delta t$.** Mismo procedimiento con $\Delta t$, $\Delta t/2$, $\Delta t/4$, sobre la
+malla seleccionada. Con `dt: auto` se varía `time.steps_per_tf` (100, 200, 400), así $t_f$ sigue
+en la malla temporal.
 
 **Barridos.** Una corrida por valor de una clave con puntos (por ejemplo,
 `load.vehicle.decel`). Los barridos también usan la malla seleccionada.
 
 **Memoria.** Para el nivel más fino (42 433 nodos × 1081 pasos), guardar todos los campos
-costaría ~370 MB. Los estudios piden `output.save_every` enorme y leen T_max(t) y las sondas, que
-`integrate` registra en cada paso con la matriz de interpolación P (Fase 5).
+costaría ~370 MB. Los estudios piden `output.save_every` enorme y leen $T_{\max}(t)$ y las
+sondas, que `integrate` registra en cada paso con la matriz de interpolación $\mathbf{P}$
+(Fase 5).
 
 | Fórmula / requisito | Código |
 |---|---|
-| ε = \|Q_i − Q_{i−1}\| / \|Q_i\| × 100 | `relative_change_percent`, `convergence.py:42`; uso en `:108` |
-| p = log2(\|T_h − T_h/2\| / \|T_h/2 − T_h/4\|) | `observed_order`, `convergence.py:47`; uso en `:117` |
-| Primer nivel con ε < 1 % en T_max y sondas | `convergence_table`, `convergence.py:85-122` (`selected = i`, `:115`) |
-| Malla 1, 2, 4, 8 con el mismo Δt | `mesh_study`, `convergence.py:125` |
-| Δt, Δt/2, Δt/4 | `timestep_study`, `convergence.py:134` (`steps_per_tf`, `:140`) |
+| $\varepsilon = \lvert Q_i - Q_{i-1}\rvert / \lvert Q_i \rvert \times 100$ | `relative_change_percent`, `convergence.py:42`; uso en `:108` |
+| $p = \log_2\left(\lvert T_h - T_{h/2}\rvert / \lvert T_{h/2} - T_{h/4}\rvert\right)$ | `observed_order`, `convergence.py:47`; uso en `:117` |
+| Primer nivel con $\varepsilon < 1\,\%$ en $T_{\max}$ y sondas | `convergence_table`, `convergence.py:85-122` (`selected = i`, `:115`) |
+| Malla 1, 2, 4, 8 con el mismo $\Delta t$ | `mesh_study`, `convergence.py:125` |
+| $\Delta t$, $\Delta t/2$, $\Delta t/4$ | `timestep_study`, `convergence.py:134` (`steps_per_tf`, `:140`) |
 | Barridos | `parameter_sweep`, `convergence.py:148` |
 | Tablas y figuras PDF | `write_table` (`:174`), `plot_convergence` (`:202`), `plot_sweep` (`:243`) |
 | Sondas en todos los pasos sin guardar campos | `integrate(..., probe_matrix)`, `timestepping.py:165`, `:223` |
 
 ## 4. Decisiones
 
-- **Sensibilidad a k en vez de "materiales".** La librería solo tiene un material de disco, y
+- **Sensibilidad a $k$ en vez de "materiales".** La librería solo tiene un material de disco, y
   sin fuente. Inventar entradas (acero, carbono-cerámica…) violaría la regla 4. El barrido usa
   `materials.overrides.disc.k` = 40, 50 y 60 (±20 %): queda marcado como no verificado y su
   título lo dice. El código barre cualquier clave. Cuando haya materiales con fuente en la
   librería, basta con barrer `materials.regions.disc` con sus nombres; el YAML lo explica en
   un comentario.
-- **ε sobre T, como define el PLAN, y además sobre T − T0.** Dividir entre T en °C hace que ε
-  dependa de la escala elegida (con T0 = 25 °C, ε se reduce). Por eso se agrega la columna
-  `eps_rise_percent`, más exigente (0,24 % frente a 0,18 % en el nivel 2). La selección usa la
-  definición del PLAN.
+- **$\varepsilon$ sobre $T$, como define el PLAN, y además sobre $T - T_0$.** Dividir entre $T$
+  en °C hace que $\varepsilon$ dependa de la escala elegida (con $T_0 = 25$ °C, $\varepsilon$ se
+  reduce). Por eso se agrega la columna `eps_rise_percent`, más exigente (0,24 % frente a 0,18 %
+  en el nivel 2). La selección usa la definición del PLAN.
 - **Los estudios posteriores usan la malla seleccionada** (`use_selected_mesh: true`). Así el
-  estudio de Δt mide el error temporal con una malla ya convergida. Se puede desactivar.
+  estudio de $\Delta t$ mide el error temporal con una malla ya convergida. Se puede desactivar.
 - **Figuras en PDF (vectorial) y PNG.** El PDF va al informe; el PNG sirve para mirarlas
   rápido.
 - **Reproducibilidad.** La carpeta del estudio guarda `study.yaml`, `base_config.yaml`,
@@ -180,58 +187,70 @@ real	0m27.038s
 
 ## 6. Resultados
 
-**Estudio de malla** (criterio: < 1 % desde el segundo nivel; prototipo: 0,12 % → 0,01 %):
+**Estudio de malla** (criterio: $< 1\,\%$ desde el segundo nivel; prototipo: 0,12 % → 0,01 %):
 
-| Nivel | Nodos | T_max [°C] | ε [%] | p |
+| Nivel | Nodos | $T_{\max}$ [°C] | $\varepsilon$ [%] | $p$ |
 |---|---|---|---|---|
 | rf = 1 | 929 | 102,297 | — | — |
 | rf = 2 | 3 028 | 102,481 | 0,180 | — |
 | rf = 4 | 11 051 | 102,549 | 0,067 | 1,43 |
 | rf = 8 | 42 433 | 102,563 | 0,013 | 2,34 |
 
-- Cumple el criterio: ε < 1 % desde el nivel 2 en T_max y en las sondas, y se selecciona
-  rf = 2. Los valores (0,18 → 0,067 → 0,013 %) son del mismo orden que los del prototipo, y el
-  último coincide (0,01 %).
+- Cumple el criterio: $\varepsilon < 1\,\%$ desde el nivel 2 en $T_{\max}$ y en las sondas, y se
+  selecciona rf = 2. Los valores (0,18 → 0,067 → 0,013 %) son del mismo orden que los del
+  prototipo, y el último coincide (0,01 %).
 - El orden observado es irregular (1,43 y 2,34). Lo esperado para P1 en temperatura nodal es
-  ≈ 2. Una causa probable (no verificada) es que las mallas de Gmsh no están anidadas: cada
-  nivel es otra triangulación y el error no decrece de forma estrictamente geométrica.
-- El instante de T_max es el mismo en todos los niveles (3,389 s) porque está cuantizado por
-  Δt = 0,0556 s.
+  $p \approx 2$. Una causa probable (no verificada) es que las mallas de Gmsh no están anidadas:
+  cada nivel es otra triangulación y el error no decrece de forma estrictamente geométrica.
+- El instante de $T_{\max}$ es el mismo en todos los niveles (3,389 s) porque está cuantizado
+  por $\Delta t = 0{,}0556$ s.
 
-**Estudio de Δt** (malla rf = 2): el orden observado es **p = 1,001**, exactamente el primer
-orden de Euler implícito (θ = 1, fijado en el YAML de referencia). La prueba
-`test_timestep_study_first_order_for_implicit_euler` lo exige a ±0,05.
+**Estudio de $\Delta t$** (malla rf = 2): el orden observado es **$p = 1{,}001$**, exactamente el
+primer orden de Euler implícito ($\theta = 1$, fijado en el YAML de referencia). La prueba
+`test_timestep_study_first_order_for_implicit_euler` lo exige a $\pm 0{,}05$.
 
-- **Con la configuración por defecto, el error temporal domina al espacial.** El salto de Δt a
-  Δt/4 cambia T_max en 0,33 °C. El de rf = 2 a rf = 8 la cambia en 0,08 °C.
-- **Extrapolación de Richardson** (con p = 1: T* ≈ 2·T_{Δt/4} − T_{Δt/2}): da T_max ≈ 102,93 °C y
-  T(60 s) ≈ 72,81 °C. Este último coincide con el 72,80 °C que dio Crank–Nicolson + Rannacher
-  en la Fase 5. Es una confirmación independiente de que la referencia de T8 (72,3 °C) lleva
-  el sesgo de θ = 1 con Δt = t_f/100.
+- **Con la configuración por defecto, el error temporal domina al espacial.** El salto de
+  $\Delta t$ a $\Delta t/4$ cambia $T_{\max}$ en 0,33 °C. El de rf = 2 a rf = 8 la cambia en
+  0,08 °C.
+- **Extrapolación de Richardson.** Si el error es $C\,\Delta t^p$ con $p = 1$, la combinación
+
+  $$
+  T^{*} \approx 2\,T_{\Delta t/4} - T_{\Delta t/2}
+  $$
+
+  cancela el término dominante. Da $T_{\max} \approx 102{,}93$ °C y
+  $T(60\ \mathrm{s}) \approx 72{,}81$ °C. Este último coincide con el 72,80 °C que dio
+  Crank–Nicolson + Rannacher en la Fase 5. Es una confirmación independiente de que la referencia
+  de T8 (72,3 °C) lleva el sesgo de $\theta = 1$ con $\Delta t = t_f/100$.
 
 **Barridos.** Las tendencias esperadas se cumplen:
 
-- **Desaceleración** (3 → 7 m/s²): T_max sube de 92,9 a 113,6 °C. La energía es la misma
-  (87,2 kJ en las 5 corridas); solo se concentra en menos tiempo, porque t_f baja de 9,3 a
+- **Desaceleración** (3 → 7 m/s²): $T_{\max}$ sube de 92,9 a 113,6 °C. La energía es la misma
+  (87,2 kJ en las 5 corridas); solo se concentra en menos tiempo, porque $t_f$ baja de 9,3 a
   4,0 s. La temperatura final no cambia (72,3–72,4 °C).
-- **Masa** (1000 → 2000 kg): T_max sube de 76,7 a 128,3 °C. Es exactamente lineal en el
-  incremento: (128,308 − 25)/(76,654 − 25) = 2,0000. Así debe ser, porque el problema es
-  lineal y q ∝ m.
-- **Velocidad** (60 → 120 km/h): T_max sube de 59,5 a 130,4 °C. La energía crece como v0²
-  (31,4 → 125,5 kJ, factor 4,0).
-- **k del disco** (40 → 60): T_max baja de 108,1 a 99,1 °C, porque un disco más conductor
+- **Masa** (1000 → 2000 kg): $T_{\max}$ sube de 76,7 a 128,3 °C. Es exactamente lineal en el
+  incremento:
+
+  $$
+  \frac{128{,}308 - 25}{76{,}654 - 25} = 2{,}0000 .
+  $$
+
+  Así debe ser, porque el problema es lineal y $q \propto m$.
+- **Velocidad** (60 → 120 km/h): $T_{\max}$ sube de 59,5 a 130,4 °C. La energía crece como
+  $v_0^2$ (31,4 → 125,5 kJ, factor 4,0).
+- **$k$ del disco** (40 → 60): $T_{\max}$ baja de 108,1 a 99,1 °C, porque un disco más conductor
   aleja el calor de la superficie. La energía de entrada cambia un poco (85,8 → 88,2 kJ)
-  porque γ depende de la efusividad, que depende de k.
+  porque $\gamma$ depende de la efusividad, que depende de $k$.
 
 ## 7. Limitaciones y riesgos
 
 - **El barrido de materiales es solo de sensibilidad** y usa valores supuestos. Comparar
   materiales reales requiere entradas con fuente en `materiales.yaml`.
 - **Orden espacial irregular** (1,43 / 2,34). No se probó con mallas estructuradas anidadas,
-  que darían un p más limpio. Con la malla estructurada, ε da 0,19 → 0,059 → 0,017 % (corrida
-  exploratoria, no incluida en el estudio).
-- **El criterio de selección (ε < 1 %) es poco exigente para este caso.** Ya el nivel 1 está a
-  ~0,26 % del más fino. La tolerancia es configurable (`tolerance_percent`).
+  que darían un $p$ más limpio. Con la malla estructurada, $\varepsilon$ da 0,19 → 0,059 →
+  0,017 % (corrida exploratoria, no incluida en el estudio).
+- **El criterio de selección ($\varepsilon < 1\,\%$) es poco exigente para este caso.** Ya el
+  nivel 1 está a ~0,26 % del más fino. La tolerancia es configurable (`tolerance_percent`).
 - **Una advertencia de materiales por corrida:** 24 líneas en un estudio. Es ruidoso pero
   cumple la regla "cada corrida advierte".
 - **El estudio completo tarda ~27 s.** Las pruebas usan versiones reducidas, salvo la de malla
@@ -240,15 +259,16 @@ orden de Euler implícito (θ = 1, fijado en el YAML de referencia). La prueba
 ## 8. Para revisar y para el informe
 
 1. **Cómo se estima el orden de convergencia sin solución exacta**, con tres niveles y la
-   razón ρ, y por qué ε entre niveles consecutivos no es el error, sino una estimación de él.
-2. **El estudio de Δt confirma p = 1 para θ = 1 y muestra que el error temporal domina** con
-   Δt = t_f/100. Es un argumento concreto para usar θ = 1/2 + Rannacher, o Δt menor, en los
-   resultados finales.
+   razón $\rho$, y por qué $\varepsilon$ entre niveles consecutivos no es el error, sino una
+   estimación de él.
+2. **El estudio de $\Delta t$ confirma $p = 1$ para $\theta = 1$ y muestra que el error temporal
+   domina** con $\Delta t = t_f/100$. Es un argumento concreto para usar $\theta = 1/2$ +
+   Rannacher, o $\Delta t$ menor, en los resultados finales.
 3. **La extrapolación de Richardson (72,81 °C) coincide con CN + Rannacher (72,80 °C).** Así se
    explica, con dos métodos independientes, la diferencia con la referencia de T8 (72,3 °C).
 4. **Las tendencias de los barridos tienen explicación física:** misma energía en menos tiempo
-   (a), linealidad exacta (m), energía ∝ v0² (v0), conducción contra acumulación superficial
-   (k).
+   ($a$), linealidad exacta ($m$), energía $\propto v_0^2$ ($v_0$), conducción contra acumulación
+   superficial ($k$).
 5. **Para el informe** (todo en `results/estudio_malla/`):
    - `mesh_study.pdf` y la tabla `mesh_study.md`: objetivo de convergencia de malla.
    - `timestep_study.pdf`: validación del orden temporal.

@@ -106,7 +106,7 @@ Salidas del estudio: ...\outS
 | `requirements-lock.txt` con `pip freeze` | hecho, 24 paquetes |
 | Entorno limpio con `pip install -e ".[dev]"` + `pytest -q` | 240 passed |
 | Entorno limpio desde el lock | 240 passed; `pip check` sin conflictos |
-| Repetir una corrida desde su `config.yaml` | mismo T_max (106,695 °C) |
+| Repetir una corrida desde su `config.yaml` | mismo $T_{\max}$ (106,695 °C) |
 
 ## 7. Limitaciones y riesgos
 
