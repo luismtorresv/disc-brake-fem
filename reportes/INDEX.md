@@ -20,3 +20,4 @@
 | 2026-11-05 | 6 | T2 — Estudio de malla y barridos sobre ejemplo_auto; sensibilidad a h (auto y moto); pendientes registrados | [F6_T2_estudio-auto-y-h.md](F6_T2_estudio-auto-y-h.md) | completa (243 passed) |
 | 2026-11-05 | 8 | T2 — Guía de uso (docs/GUIA_USO.md) e insumos del informe (docs/INSUMOS_INFORME.md) | [F8_T2_guia-uso-e-insumos-informe.md](F8_T2_guia-uso-e-insumos-informe.md) | completa (243 passed); ejemplo_perfil regenerado |
 | 2026-11-05 | 8 | T3 — Notación matemática en LaTeX (Obsidian) en reportes y docs | [F8_T3_latex-en-markdown.md](F8_T3_latex-en-markdown.md) | completa (sin cambios de código); render en Obsidian no verificado |
+| 2026-11-08 | 9 | T1 — Informe final en formato elsarticle (J. Comput. Sci.) sobre el anteproyecto extenso | [F9_T1_informe-final.md](F9_T1_informe-final.md) | completa (243 passed; PDF compila sin referencias sin resolver); 1 referencia sin autores (VERIFICAR) |

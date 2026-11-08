@@ -519,6 +519,15 @@ hay que recalcularlos, no ajustarlos.
   dos entornos limpios (Windows, Python 3.13): `pip install -e ".[dev]"` → 240 passed; desde el
   lock → 240 passed, `pip check` sin conflictos. Linux no verificado.
   Reporte: `reportes/F8_T1_documentacion-reproducibilidad.md`.
+- [x] Informe final (2026-11-08). `informe/informe_final.tex` (clase elsarticle, referente
+  J. Comput. Sci.), escrito sobre `Anteproyecto extenso.tex`: conserva planteamiento, teoría y
+  objetivos, corrige lo que el desarrollo cambió y añade verificación, resultados y
+  conclusiones. Bibliografía en `informe/referencias.bib` (DOI confirmados, casi todos con Crossref; una
+  entrada sin autores, marcada VERIFICAR). Figuras nuevas T6/T7 con
+  `scripts/figuras_informe.py`. Cuerpo ≈ 4100 palabras (texcount) + apéndices ≈ 540. PDF de
+  19 páginas, sin referencias sin resolver. 243 passed. Pendientes 7, 8 y 11 resueltos en el
+  informe (el `Anteproyecto.tex` original no se tocó).
+  Reporte: `reportes/F9_T1_informe-final.md`.
 
 ---
 
