@@ -7,6 +7,7 @@ cerradas de la §3.4, a 1e-12 relativo.
 from __future__ import annotations
 
 import math
+import re
 import warnings
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from discfem.loads import (
     make_load,
 )
 from discfem.materials import (
+    SOURCE_MISSING,
     Material,
     PropertyRangeWarning,
     UnverifiedMaterialWarning,
@@ -206,7 +208,7 @@ def _write_lib(tmp_path, entry: dict) -> Path:
 BASE = {"k": 50.0, "rho": 7200.0, "cp": 460.0, "source": "Libro, tabla 1", "verified": True}
 
 
-@pytest.mark.parametrize("missing", ["source", "verified", "k"])
+@pytest.mark.parametrize("missing", ["k", "rho", "cp"])
 def test_missing_required_key_fails_in_spanish(tmp_path, missing):
     entry = {k: v for k, v in BASE.items() if k != missing}
     with pytest.raises(ValueError, match=f"le falta la clave obligatoria '{missing}'"):
@@ -214,9 +216,32 @@ def test_missing_required_key_fails_in_spanish(tmp_path, missing):
 
 
 @pytest.mark.parametrize(
+    "entry",
+    [
+        {"k": 10.0, "rho": 1000.0, "cp": 1000.0},                      # sin source ni verified
+        {"k": 10.0, "rho": 1000.0, "cp": 1000.0, "source": "  "},      # source vacía
+        {"k": 10.0, "rho": 1000.0, "cp": 1000.0, "verified": False},   # sin source
+    ],
+)
+def test_source_and_verified_are_optional(tmp_path, entry):
+    """Sin source/verified el material carga, queda no verificado y la corrida lo advierte."""
+    m = load_library(_write_lib(tmp_path, entry))["x"]
+    assert m.source == SOURCE_MISSING and m.verified is False
+    with pytest.warns(UnverifiedMaterialWarning, match=re.escape(f"x (source: {SOURCE_MISSING})")):
+        assert warn_unverified([m]) == ["x"]
+
+
+def test_source_without_verified_defaults_to_unverified(tmp_path):
+    m = load_library(_write_lib(tmp_path, {k: v for k, v in BASE.items() if k != "verified"}))["x"]
+    assert m.source == "Libro, tabla 1" and m.verified is False
+
+
+@pytest.mark.parametrize(
     ("entry", "match"),
     [
-        ({**BASE, "source": "  "}, "source' vacío"),
+        ({**BASE, "source": "  "}, "verified: true pero no declara 'source'"),
+        ({k: v for k, v in BASE.items() if k != "source"}, "verified: true pero no declara"),
+        ({**BASE, "source": 3}, "debe ser un texto"),
         ({**BASE, "verified": "si"}, "true o false"),
         ({**BASE, "k": -1.0}, "> 0"),
         ({**BASE, "conductividad": 1.0}, "desconocidas"),

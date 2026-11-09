@@ -180,6 +180,7 @@ materials:
   pad: pad_limpert         # opcional; tiene prioridad sobre el preset
   custom:                  # materiales definidos aquí mismo (mismas reglas que la librería)
     mi_acero: {k: 30.0, rho: 7800.0, cp: 470.0, source: "Ficha X, tabla Y", verified: false}
+    juguete: {k: 10.0, rho: 1000.0, cp: 1000.0}   # de prueba: sin fuente, queda no verificado
   overrides: {disc: {k: 48.0}}   # cambia propiedades de una región (queda como no verificado)
 ```
 
@@ -252,10 +253,13 @@ output:
        verified: false  # true solo si contrastó los valores con la fuente
    ```
 
-   `source` y `verified` son **obligatorios**. Si falta alguno, el programa se detiene. Mientras
+   Solo `k`, `rho` y `cp` son obligatorios. `source` y `verified` son opcionales: si se omiten,
+   el material queda con `source: "sin fuente declarada"` y `verified: false`, lo que sirve para
+   pruebas con valores de juguete. `verified: true` sin `source` es un error. Mientras
    `verified: false`, cada corrida imprime `ADVERTENCIA (UnverifiedMaterialWarning)`. Si un
    valor está fuera de los rangos de sanidad (por ejemplo, k ∉ (0,01; 500)), también advierte.
-   **No escriba valores "típicos" de memoria:** cite siempre la fuente.
+   **Para resultados que vaya a reportar, no escriba valores "típicos" de memoria:** cite la
+   fuente.
 
 2. Úselo en una corrida con `materials.regions.disc: mi_material` o `materials.pad: mi_material`,
    o créele un preset:
@@ -279,7 +283,7 @@ Materiales actuales:
 
 Presets: `car` = `gray_cast_iron_limpert` + `pad_limpert`; `motorcycle` =
 `stainless_steel_410` + `sintered_pad_cu_zhou2024`. Los detalles y las reservas de cada fuente
-están en `materiales.yaml` y en los reportes `F7_T2` a `F7_T5`.
+están en los comentarios de `configs/materiales.yaml`.
 
 ---
 

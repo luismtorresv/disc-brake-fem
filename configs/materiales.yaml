@@ -1,7 +1,8 @@
 # Librería de materiales (PLAN.md §4; formato con secciones de la Fase 7).
 #
-# materials: cada entrada OBLIGA a `source` y `verified` (CLAUDE.md, regla 4). Mientras
-#   `verified: false`, cada corrida imprime una advertencia con la lista.
+# materials: cada entrada lleva `source` y `verified` (CLAUDE.md, regla 4). En el código son
+#   opcionales (por omisión: "sin fuente declarada", false). Mientras `verified: false`, cada
+#   corrida imprime una advertencia con la lista.
 # presets:   materiales de disco y pastilla por tipo de vehículo; en la config de una corrida
 #   basta `materials: {preset: car}`. Lo que se escriba explícitamente en `regions` o `pad`
 #   tiene prioridad sobre el preset.

@@ -12,6 +12,7 @@ import copy
 import hashlib
 import json
 import math
+import re
 import warnings
 from pathlib import Path
 
@@ -28,7 +29,12 @@ from discfem.geometry import (
     polygon_area,
 )
 from discfem.loads import brake_load_vector, make_load
-from discfem.materials import brake_regions, load_library, load_presets
+from discfem.materials import (
+    UnverifiedMaterialWarning,
+    brake_regions,
+    load_library,
+    load_presets,
+)
 from discfem.mesh import MeshOptions, boundary_edges, build_mesh
 from discfem.solver import run
 from discfem.timestepping import integrate, time_grid
@@ -292,13 +298,26 @@ def test_preset_and_explicit_priority():
     [
         ({"materials.preset": "camion"}, "no existe"),
         ({"materials.custom": {"gray_cast_iron": CUSTOM_SOFT}}, "ya existe"),
-        ({"materials.custom": {"x": {k: v for k, v in CUSTOM_SOFT.items() if k != "source"}},
-          "materials.regions.disc": "x"}, "source"),
+        ({"materials.custom": {"x": {**{k: v for k, v in CUSTOM_SOFT.items() if k != "source"},
+                                     "verified": True}},
+          "materials.regions.disc": "x"}, "no declara 'source'"),
     ],
 )
 def test_material_errors(change, match):
     with pytest.raises(ValueError, match=match):
         run(REF, {**change, "mesh.backend": "structured", "time.t_end": 6.0}, write=False)
+
+
+def test_custom_material_without_source_runs_and_warns():
+    """Un material de prueba con solo k, ρ, c_p corre; queda 'sin fuente declarada' y la
+    corrida lo lista como no verificado."""
+    toy = {"k": 10.0, "rho": 1000.0, "cp": 1000.0}
+    with pytest.warns(UnverifiedMaterialWarning, match=re.escape("juguete (source: sin fuente declarada)")):
+        res = run(REF, {"materials.custom": {"juguete": toy}, "materials.regions.disc": "juguete",
+                        "mesh.backend": "structured", "time.t_end": 6.0}, write=False)
+    m = res.materials["disc"]
+    assert m.source == "sin fuente declarada" and not m.verified
+    assert "juguete" in res.summary["unverified_materials"]
 
 
 @pytest.mark.parametrize(

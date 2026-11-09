@@ -41,8 +41,10 @@ Fuera (no implementar sin que se pida):
 1. Una fase de `PLAN.md` por sesión. No avances a la siguiente hasta que `pytest -q` pase.
 2. Escribe las pruebas de la fase **antes** o junto con el código, y pega la salida de pytest.
 3. Ensamblaje vectorizado con numpy/scipy; sin bucles de Python sobre elementos.
-4. Nunca inventes propiedades de materiales. Toda entrada de `materiales.yaml` lleva `source`
-   y `verified`. Mientras `verified: false`, cada corrida imprime una advertencia con la lista.
+4. Nunca inventes propiedades de materiales. Toda entrada de `materiales.yaml` que se use en el
+   informe lleva `source` y `verified`. Para uso general ambos son opcionales en el código (por
+   omisión: `source: "sin fuente declarada"`, `verified: false`); `verified: true` exige `source`.
+   Mientras `verified: false`, cada corrida imprime una advertencia con la lista.
 5. Los parámetros viven en el YAML, no en el código. Una corrida debe poder reproducirse con
    solo su `config.yaml` (el programa copia la config a la carpeta de resultados).
 6. Identificadores en inglés; docstrings, comentarios y mensajes de error para el usuario en
@@ -72,30 +74,7 @@ pytest y ruff en desarrollo.
 Código + pruebas pasando + docstrings + sección "ESTADO" de `PLAN.md` actualizada + commit.
 
 
-## Reportes (obligatorio)
+## Reportes
 
-Al terminar CADA tarea (no solo cada fase), escribe un reporte en `reportes/` antes de dar la
-tarea por cerrada. Nombre: `reportes/F<fase>_T<n>_<nombre-corto>.md` (ej. `F2_T1_matrices-elementales.md`).
-Añade además una línea al índice `reportes/INDEX.md` (fecha, fase, tarea, enlace, estado).
-
-Idioma: español. Público: un estudiante que domina FEM estacionario visto en clase pero no el caso
-transitorio ni la geometría axisimétrica; explica esos puntos sin dar nada por sabido.
-
-Cada reporte tiene exactamente estas secciones:
-1. **Qué se pidió**: la tarea, citando la sección de PLAN.md que aplica.
-2. **Qué se hizo**: lista de archivos creados o modificados, con ruta y una línea por archivo.
-3. **Cómo funciona**: explicación clara, en prosa, del algoritmo. Incluye una tabla
-   "ecuación ↔ código" (símbolo o fórmula de PLAN.md ↔ función y línea).
-4. **Decisiones**: qué elegiste, qué alternativas descartaste y por qué.
-5. **Cómo verificarlo**: comandos exactos y la salida REAL pegada (pytest, números). Si no
-   ejecutaste algo, escribe "no ejecutado"; nunca resumas una salida que no viste.
-6. **Resultados**: valores numéricos obtenidos y comparación con la referencia de la sección 6.
-7. **Limitaciones y riesgos**: qué no cubre, qué podría fallar, qué supuestos quedan sin verificar.
-8. **Para revisar y para el informe**: 3 a 5 puntos que el usuario debe entender para poder
-   defender este código, y qué figura o tabla de esta tarea sirve para el informe final.
-
-Reglas del reporte:
-- No afirmes que algo funciona sin una ejecución que lo muestre en la sección 5.
-- Si una prueba falló o relajaste algo, dilo en la primera línea del reporte.
-- Si hay una fórmula, escríbela una vez en texto plano y explica cada símbolo.
-- Al cerrar la tarea, en el chat entrega un resumen de máximo 6 líneas y la ruta del reporte.
+Ya no se escriben reportes por tarea. `reportes/` conserva solo los que explican el código y su
+validación (índice en `reportes/INDEX.md`); no añadas nuevos salvo que se pida.

@@ -1,9 +1,11 @@
 """Librería de materiales, efusividad térmica y partición de calor γ (PLAN.md §3.4 y §4).
 
-Reglas (CLAUDE.md, regla 4): ninguna propiedad se inventa en el código. Toda entrada de la
-librería debe traer ``source`` (texto no vacío) y ``verified`` (booleano). Si falta alguno, la
-carga falla con un mensaje en español. Mientras haya materiales con ``verified: false``, cada
-corrida debe emitir :class:`UnverifiedMaterialWarning` con la lista (ver :func:`warn_unverified`).
+Reglas (CLAUDE.md, regla 4): ninguna propiedad se inventa en el código. Cada entrada de la
+librería puede traer ``source`` (texto) y ``verified`` (booleano); ambos son opcionales para que
+el programa sirva también con valores de prueba. Si se omiten, el material queda con
+``source = SOURCE_MISSING`` y ``verified = False``. No se admite ``verified: true`` sin una
+``source``. Mientras haya materiales con ``verified: false``, cada corrida emite
+:class:`UnverifiedMaterialWarning` con la lista (ver :func:`warn_unverified`).
 
 Partición del calor de fricción entre disco y pastilla, por efusividades e = √(k ρ c_p):
 
@@ -22,6 +24,9 @@ import yaml
 
 _PROPERTY_KEYS = ("k", "rho", "cp")
 _ALLOWED_KEYS = {"description", "k", "rho", "cp", "source", "verified"}
+
+#: ``source`` que recibe un material cuando la entrada no la declara (o la deja vacía).
+SOURCE_MISSING = "sin fuente declarada"
 
 #: Rangos de sanidad (PLAN.md §4; aproximados, "de memoria; verificar"). Fuera de ellos se
 #: advierte, sin abortar.
@@ -50,7 +55,7 @@ class Material:
         k: conductividad [W/(m·K)].
         rho: densidad [kg/m³].
         cp: calor específico [J/(kg·K)].
-        source: referencia bibliográfica (obligatoria).
+        source: referencia bibliográfica (``SOURCE_MISSING`` si no se declaró).
         verified: True solo si los valores se contrastaron con ``source``.
         description: texto libre.
     """
@@ -101,18 +106,26 @@ def _material_from_entry(name: str, entry: dict) -> Material:
     unknown = set(entry) - _ALLOWED_KEYS
     if unknown:
         raise ValueError(f"Claves desconocidas en el material '{name}': {sorted(unknown)}.")
-    for key in (*_PROPERTY_KEYS, "source", "verified"):
+    for key in _PROPERTY_KEYS:
         if key not in entry:
             raise ValueError(
                 f"Al material '{name}' le falta la clave obligatoria '{key}'. Toda entrada de la "
-                "librería debe tener k, rho, cp, source y verified (CLAUDE.md, regla 4)."
+                "librería debe tener k, rho y cp (source y verified son opcionales)."
             )
-    source = entry["source"]
-    if not isinstance(source, str) or not source.strip():
-        raise ValueError(f"El material '{name}' tiene 'source' vacío: cite la fuente.")
-    if not isinstance(entry["verified"], bool):
+    source = entry.get("source")
+    if source is None or (isinstance(source, str) and not source.strip()):
+        source = SOURCE_MISSING
+    elif not isinstance(source, str):
+        raise ValueError(f"En el material '{name}', 'source' debe ser un texto.")
+    verified = entry.get("verified", False)
+    if not isinstance(verified, bool):
         raise ValueError(
             f"En el material '{name}', 'verified' debe ser true o false."
+        )
+    if verified and source == SOURCE_MISSING:
+        raise ValueError(
+            f"El material '{name}' tiene verified: true pero no declara 'source': un valor solo "
+            "puede estar verificado contra una fuente citada."
         )
     props = {}
     for key in _PROPERTY_KEYS:
@@ -128,7 +141,7 @@ def _material_from_entry(name: str, entry: dict) -> Material:
     return Material(
         name=name,
         source=source,
-        verified=entry["verified"],
+        verified=verified,
         description=str(entry.get("description", "")),
         **props,
     )
@@ -190,8 +203,8 @@ def load_presets(path: str | Path, library: dict[str, Material]) -> dict[str, di
 
 def add_custom_materials(library: dict[str, Material], custom: dict | None) -> dict[str, Material]:
     """Librería + materiales definidos por el usuario en ``materials.custom`` del YAML de la
-    corrida. Se validan igual que los de la librería (``source`` y ``verified`` obligatorios)
-    y no pueden repetir un nombre de la librería."""
+    corrida. Se validan igual que los de la librería (``source`` y ``verified`` opcionales;
+    por omisión, sin fuente y no verificado) y no pueden repetir un nombre de la librería."""
     out = dict(library)
     for name, entry in (custom or {}).items():
         if name in library:

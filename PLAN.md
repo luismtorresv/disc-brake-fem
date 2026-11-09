@@ -252,7 +252,9 @@ output:
   formats: [csv, vtk, png]
 ```
 
-`configs/materiales.yaml`: cada entrada **obliga** a `source` y `verified`:
+`configs/materiales.yaml`: cada entrada lleva `source` y `verified` (desde el 2026-11-09 son opcionales en
+el código para uso general: si faltan, el material queda "sin fuente declarada" y no verificado;
+`verified: true` sin `source` es un error):
 
 ```yaml
 gray_cast_iron:
@@ -563,3 +565,11 @@ hay que recalcularlos, no ajustarlos.
 11. Cosméticos: una etiqueta encimada en `gamma_map` (panel derecho); espacio en blanco a la
     izquierda en `field.png` del perfil.
 12. `prompt.txt` vacío y sin versionar: se puede borrar.
+
+**Cambio posterior (2026-11-09):** `source` y `verified` de los materiales pasan a ser
+opcionales (por omisión "sin fuente declarada" / `false`, con la advertencia de siempre) para usar
+el programa con valores de prueba. No cambia ningún resultado del informe. 250 passed.
+
+**Reportes (2026-11-09):** se conservan solo los que explican el código y su validación (F1–F5,
+F6_T1, F6_T2, F7_T1, F7_T7). Los demás que se citan arriba (F0_T1, F7_T2–T6, F8_T1–T2, F9_T1) se
+eliminaron; los versionados siguen en el historial de git. Ya no se escriben reportes por tarea.

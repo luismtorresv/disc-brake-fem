@@ -137,8 +137,10 @@ requieren un modelo 3D.
 ### 4.2 Materiales
 
 Los materiales viven en una librería aparte, `configs/materiales.yaml`. Cada material tiene $k$,
-$\rho$, $c_p$ y, de forma obligatoria, **la fuente** de donde salieron (`source`) y si se
-contrastaron con ella (`verified`). Si un material no está verificado, cada corrida lo advierte.
+$\rho$, $c_p$ y, opcionalmente, **la fuente** de donde salieron (`source`) y si se contrastaron
+con ella (`verified`). Si se omiten, el material queda "sin fuente declarada" y no verificado (útil
+para pruebas). Si un material no está verificado, cada corrida lo advierte. `verified: true` exige
+una `source`.
 
 Hay varias formas de elegir materiales en un caso, de la más cómoda a la más fina:
 
@@ -246,6 +248,6 @@ resultado sea preciso; para eso están los estudios de malla y de $\Delta t$.
 | "el polígono se autointersecta"                               | dos lados del perfil se cruzan                                               |
 | Error al usar `profile` o `regions` con la malla estructurada | requieren `mesh.backend: gmsh`                                               |
 | Advertencia `UnverifiedMaterialWarning` en cada corrida       | algún material tiene `verified: false`; es informativa, no un error          |
-| El material no se encuentra                                   | falta `source` o `verified`, o el nombre no está en la librería              |
+| El material no se encuentra                                   | el nombre no está en la librería (o le falta `k`, `rho` o `cp`)              |
 | `test_rectangle_unchanged` falla en otra máquina              | otra versión de Gmsh o numpy; instalar con `requirements-lock.txt`           |
 | Corridas grandes ocupan mucho disco                           | subir `output.save_every`                                                    |
