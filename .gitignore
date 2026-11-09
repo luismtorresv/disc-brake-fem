@@ -9,12 +9,5 @@ results/
 # Fuentes bibliográficas con derechos de autor: no se versionan
 legacy/*.pdf
 *.aux
-# Artefactos de compilación LaTeX del informe (el PDF sí se versiona)
-informe/*.log
-informe/*.aux
-informe/*.bbl
-informe/*.blg
-informe/*.fls
-informe/*.fdb_latexmk
-informe/*.out
-informe/*.spl
+# Informe: no se versiona
+informe/
