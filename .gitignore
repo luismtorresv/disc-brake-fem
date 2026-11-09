@@ -11,3 +11,7 @@ legacy/*.pdf
 *.aux
 # Informe: no se versiona
 informe/
+Anteproyecto*.tex
+docs/INSUMOS_INFORME.md
+rubrica_informe.pdf
+scripts/figuras_informe.py
